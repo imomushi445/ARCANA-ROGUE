@@ -48,6 +48,29 @@
     background: radial-gradient(circle at center, #1a1c23 0%, #0b0c10 100%);
   }
   canvas { display: block; cursor: crosshair; }
+  .arcana-burst-notice {
+    position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 30; pointer-events: none; width: min(94%, 490px);
+    padding: 22px 16px; text-align: center; white-space: pre-line;
+    font-size: clamp(1rem, 2.8vw, 1.35rem); font-weight: bold;
+    line-height: 1.7; letter-spacing: .03em;
+    color: #ffeac0; text-shadow: 0 2px 8px #000, 0 0 14px #c28b37;
+    background: radial-gradient(ellipse, rgba(49,32,53,.97), rgba(10,12,20,.89));
+    border: 2px solid #d7ac60; border-radius: 12px;
+    box-shadow: 0 0 50px rgba(197,160,89,.55), inset 0 0 25px rgba(197,160,89,.14);
+    opacity: 0; visibility: hidden;
+  }
+  .arcana-burst-notice.show {
+    visibility: visible; animation: arcana-burst-message 2s ease-in-out both;
+  }
+  @keyframes arcana-burst-message {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.86); }
+    13%, 73% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .arcana-burst-notice.show { animation-duration: 3s; }
+  }
 
   .hand-bar {
     height: 140px; background: rgba(15, 16, 20, 0.9);
@@ -202,6 +225,85 @@
   .bgm-controls .bgm-label { color: #b8c4cf; font-size: 0.7rem; }
   .help-body h4 { margin: 12px 0 4px; color: var(--gold); font-size: 0.85rem; }
   .help-body ul { margin: 0; padding-left: 1.2em; }
+
+  /* ===== タイトルから閲覧できるアルカナ図鑑 ===== */
+  .gallery-modal .modal-content {
+    max-width: 1060px;
+    width: min(96vw, 1060px);
+    height: min(92vh, 850px);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+  .gallery-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .gallery-heading h2 { color: var(--gold); margin: 0; letter-spacing: 0.1em; }
+  .gallery-heading p { margin: 5px 0 0; font-size: 0.76rem; color: #a6b3bf; }
+  .gallery-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(285px, 350px);
+    gap: 16px;
+    min-height: 0;
+    flex: 1;
+  }
+  .gallery-library { display: flex; flex-direction: column; min-height: 0; gap: 9px; }
+  .gallery-card:focus-visible, .gallery-heading button:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
+  .gallery-count { font-size: 0.7rem; color: #9caab9; }
+  .gallery-grid {
+    overflow-y: auto; min-height: 0; padding: 4px;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 9px; align-content: start;
+  }
+  .gallery-card {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: #10131c; border: 1px solid #655536; border-radius: 7px;
+    padding: 7px 5px; cursor: pointer; min-width: 0; color: #e6e0d4;
+  }
+  .gallery-card img { display: block; width: min(100%, 84px); aspect-ratio: 168/300; object-fit: contain; border-radius: 4px; }
+  .gallery-card span { font-size: 0.7rem; text-align: center; overflow-wrap: anywhere; }
+  .gallery-card:hover, .gallery-card.active { border-color: var(--gold); background: #292432; box-shadow: 0 0 0 1px rgba(243,156,18,0.35); }
+  .gallery-detail {
+    background: #0d1119; border: 1px solid #665637; border-radius: 8px;
+    padding: 14px; overflow-y: auto; min-height: 0;
+  }
+  .gallery-detail-top { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .gallery-detail-image { width: 108px; aspect-ratio: 168/300; object-fit: contain; border: 1px solid #8d733c; border-radius: 5px; flex-shrink: 0; }
+  .gallery-detail-number { color: var(--gold); font-size: 0.75rem; }
+  .gallery-detail-name { color: #fff; font-weight: bold; font-size: 1.2rem; margin: 5px 0; }
+  .gallery-detail-en { font-size: 0.67rem; color: #a1adbd; }
+  .gallery-detail-damage { font-size: 0.8rem; margin-top: 12px; }
+  .gallery-section {
+    padding-top: 9px; margin-top: 10px; border-top: 1px solid #393746;
+    font-size: 0.79rem; line-height: 1.6; color: #c7d5e0;
+  }
+  .gallery-section h3 { color: #f0d69c; font-size: 0.84rem; margin: 0 0 6px; border: 0; }
+  .gallery-section.reverse h3 { color: #d9a8f2; }
+  .gallery-effect { margin-bottom: 6px; overflow-wrap: anywhere; }
+  .gallery-effect b { color: #b893d7; }
+  @media (max-width: 820px) {
+    .gallery-modal .modal-content { padding: 14px; }
+    .gallery-layout { grid-template-columns: minmax(0,1fr) minmax(220px, 45%); gap: 10px; }
+    .gallery-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .gallery-detail-top { flex-direction: column; }
+    .gallery-detail-image { width: 86px; }
+  }
+  @media (max-width: 540px) {
+    .gallery-modal .modal-content { height: 94vh; }
+    .gallery-heading h2 { font-size: 1.1rem; }
+    .gallery-layout { display: flex; flex-direction: column; }
+    .gallery-library { flex: 1 1 48%; min-height: 125px; }
+    .gallery-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .gallery-detail { flex: 1 1 52%; min-height: 170px; }
+    .gallery-detail-top { flex-direction: row; }
+  }
 </style>
 </head>
 <body>
@@ -222,10 +324,32 @@ const ITEM_SRC = {"knife": {"src": "data:image/webp;base64,UklGRrggAABXRUJQVlA4W
   <div class="fan" id="titleFan"></div>
   <div class="t-btns">
     <button class="t-btn main" onclick="startGame()">はじめる</button>
+    <button class="t-btn" id="openGalleryBtn" onclick="openCardGallery()">カード一覧</button>
     <button class="t-btn" onclick="openHelp()">あそびかた</button>
   </div>
   <div class="t-tag">— 6体の駒を打ち倒し、運命を超えろ —</div>
   <div class="t-hint">Enter キーでも開始できます</div>
+</div>
+
+
+<!-- 大アルカナ22枚のカード一覧。タイトル画面からゲーム開始前に閲覧できる -->
+<div id="cardGalleryModal" class="modal gallery-modal" role="dialog" aria-modal="true" aria-labelledby="galleryTitle" onclick="if(event.target===this) closeCardGallery()">
+  <div class="modal-content">
+    <div class="gallery-heading">
+      <div>
+        <h2 id="galleryTitle">大アルカナ カード一覧</h2>
+        <p>全22枚の正位置・逆位置の効果を確認できます。</p>
+      </div>
+      <button type="button" onclick="closeCardGallery()">戻る</button>
+    </div>
+    <div class="gallery-layout">
+      <div class="gallery-library">
+        <div class="gallery-count" id="galleryCount">全22枚</div>
+        <div class="gallery-grid" id="galleryGrid" aria-label="アルカナカード一覧"></div>
+      </div>
+      <div class="gallery-detail" id="galleryDetail" aria-live="polite"></div>
+    </div>
+  </div>
 </div>
 
 <div id="helpModal" class="modal">
@@ -265,6 +389,7 @@ const ITEM_SRC = {"knife": {"src": "data:image/webp;base64,UklGRrggAABXRUJQVlA4W
 
   <div class="canvas-wrap" id="canvasWrap">
     <canvas id="gameCanvas"></canvas>
+    <div id="arcanaBurstNotice" class="arcana-burst-notice" aria-live="polite"></div>
   </div>
 
   <div class="sidebar right">
@@ -282,7 +407,7 @@ const ITEM_SRC = {"knife": {"src": "data:image/webp;base64,UklGRrggAABXRUJQVlA4W
       手札を選び、画面下の「↑正位置 / ↓逆位置」で向きを選んでから盤面をクリックします（1ターン2枚まで）。<br>
       配置時ダメージは逆位置で逆向きに働きます。逆位置カードは<strong>所有者のターン終了時に専用効果</strong>を発動します。<br>
       配置済みのカードには、味方・敵ともに上書きできません。空きマスを選んでください。<br>
-      25マスが埋まると盤面の全カードを除去し、味方のカードは山札へ戻します。手札と墓地も混ぜ直して4枚引き直します。<br>
+      25マスが埋まると「アルカナバースト」が発動！ 盤面のカード枚数が少ない側の王冠が1つ減り、その後盤面をリセットして手札を4枚引き直します。<br>
       手札が尽きる（引けるカードが山札にも墓地にも無い）と、盤面のデッキ由来カードを回収します。
     </div>
   </div>
@@ -1134,15 +1259,40 @@ function refreshDetail() {
 }
 
 /* ===== 手札・山札 ===== */
-// 25マスが全て埋まった場合、全カードを一度取り除き、4枚の手札を引き直す。
+// アルカナバースト：場が全25マス埋まった時、カードの少ない側の王冠を1つ失わせ、盤面を初期化する。
+// カードの陣営は deckCard（元の持ち主）ではなく isPlayer（現在の所有者）で数える。
+function showArcanaBurst(message) {
+  const notice = document.getElementById('arcanaBurstNotice');
+  notice.textContent = `✦ アルカナバースト ✦\n${message}`;
+  notice.classList.remove('show');
+  void notice.offsetWidth; // 続けて発動しても演出を最初から再生する
+  notice.classList.add('show');
+}
+
 // 敵の生成カードには山札がないため除去のみ。元々プレイヤーデッキ由来の
 // カードは、寝返って敵側にあってもプレイヤーの山札へ戻す。
 function resetFullBoardIfNeeded() {
   if (gameState.locked || !gameState.grid.every(cell => cell !== null)) return false;
 
+  const playerCount = gameState.grid.filter(cell => cell.isPlayer).length;
+  const enemyCount = gameState.grid.length - playerCount;
+  let burstOutcome;
+  if (playerCount < enemyCount) {
+    gameState.playerCrowns = Math.max(0, gameState.playerCrowns - 1);
+    burstOutcome = '味方の王冠が1つ失われた！';
+  } else if (enemyCount < playerCount) {
+    gameState.enemyCrowns = Math.max(0, gameState.enemyCrowns - 1);
+    burstOutcome = '敵の王冠が1つ失われた！';
+  } else {
+    burstOutcome = '同数のため王冠の変化なし！';
+  }
+  updateCrowns();
+  log(`⚡ アルカナバースト発動！ 味方${playerCount}枚 vs 敵${enemyCount}枚。${burstOutcome}`);
+  showArcanaBurst(`味方 ${playerCount}枚　対　敵 ${enemyCount}枚\n${burstOutcome}`);
+
+  // 王冠の判定が終わってから、すべてのカードを元の山札へ回収して引き直す。
   const returnCards = gameState.grid.filter(cell => cell.deckCard).map(cell => cell.cardId);
   const enemyCards = gameState.grid.length - returnCards.length;
-  // 残った手札と墓地も戻すことで、必ずデッキ全体から4枚引き直せる。
   gameState.deck.push(...returnCards, ...gameState.hand, ...gameState.graveyard);
   gameState.hand = [];
   gameState.graveyard = [];
@@ -1152,11 +1302,15 @@ function resetFullBoardIfNeeded() {
   hoverHandId = null;
   gameState.bonusDraw = 0; // リセット時は正確に4枚引く
 
-  log(`🔄 盤面が25マス埋まった！ 味方のカード${returnCards.length}枚を山札へ戻し、敵カード${enemyCards}枚を取り除いた。`);
+  log(`🔄 盤面リセット：デッキ由来のカード${returnCards.length}枚を山札へ戻し、敵の生成カード${enemyCards}枚を取り除いた。`);
   drawHand(HAND_SIZE);
   log(`🔄 手札を${gameState.hand.length}枚引き直した。`);
   if (gameState.inEnemyTurn) gameState.fullBoardRedrawDuringEnemy = true;
   draw();
+
+  // バーストで王冠が0になった場合は、その場で通常の勝敗処理に移る。
+  if (gameState.playerCrowns <= 0) gameOver();
+  else if (gameState.enemyCrowns <= 0) triggerVictory();
   return true;
 }
 
@@ -1521,6 +1675,7 @@ async function enemyPlaceCard(plannedId, previewIndex) {
   if (empty.length === 0) {
     // 万一、敵の行動開始時点で満杯なら先に盤面をリセットする。
     resetFullBoardIfNeeded();
+    if (gameState.locked) return null;
     gameState.grid.forEach((cell, idx) => { if (!cell) empty.push(idx); });
   }
   if (empty.length === 0) {
@@ -1864,6 +2019,86 @@ function startGame() {
   startDraft();
 }
 
+
+/* ===== タイトル画面：カード一覧 ===== */
+let gallerySelectedId = 0;
+
+function openCardGallery() {
+  if (!titleVisible()) return;
+  gallerySelectedId = 0;
+  renderCardGallery();
+  document.getElementById('cardGalleryModal').style.display = 'flex';
+  document.getElementById('openGalleryBtn').blur();
+}
+
+function closeCardGallery() {
+  document.getElementById('cardGalleryModal').style.display = 'none';
+  if (titleVisible()) document.getElementById('openGalleryBtn').focus();
+}
+
+function renderCardGallery() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '';
+  document.getElementById('galleryCount').textContent = `全${ARCANA_DATA.length}枚`;
+  ARCANA_DATA.forEach(a => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.cardId = String(a.id);
+    b.className = 'gallery-card' + (a.id === gallerySelectedId ? ' active' : '');
+    b.setAttribute('aria-pressed', String(a.id === gallerySelectedId));
+    b.setAttribute('aria-label', `${a.id}番 ${a.jp} の効果を表示`);
+    const img = document.createElement('img');
+    img.src = CARD_SRC[a.id];
+    img.alt = '';
+    img.loading = 'lazy';
+    const label = document.createElement('span');
+    label.textContent = `#${a.id} ${a.jp}`;
+    b.append(img, label);
+    b.addEventListener('click', () => selectGalleryCard(a.id));
+    grid.appendChild(b);
+  });
+  renderGalleryDetail(gallerySelectedId);
+}
+
+function selectGalleryCard(id) {
+  gallerySelectedId = id;
+  document.querySelectorAll('#galleryGrid .gallery-card').forEach(b => {
+    const selected = Number(b.dataset.cardId) === id;
+    b.classList.toggle('active', selected);
+    b.setAttribute('aria-pressed', String(selected));
+  });
+  renderGalleryDetail(id);
+}
+
+function renderGalleryDetail(id) {
+  const a = ARCANA_DATA[id];
+  const effect = EFFECTS[id];
+  const reverse = REVERSE_EFFECTS[id];
+  const info = effect.info.map(([timing, description]) =>
+    `<div class="gallery-effect"><b>【${timing}】</b>${description}</div>`).join('');
+  document.getElementById('galleryDetail').innerHTML = `
+    <div class="gallery-detail-top">
+      <img class="gallery-detail-image" src="${CARD_SRC[id]}" alt="${a.jp}のタロットカード">
+      <div>
+        <div class="gallery-detail-number">ARCANA ${String(id).padStart(2, '0')} / 21</div>
+        <div class="gallery-detail-name">${a.jp}</div>
+        <div class="gallery-detail-en">${a.name}</div>
+        <div class="gallery-detail-damage">基本ダメージ：<b>${basePush(id)}</b></div>
+      </div>
+    </div>
+    <section class="gallery-section">
+      <h3>↑ 正位置・通常能力</h3>
+      ${info || '<div>固有効果なし</div>'}
+    </section>
+    <section class="gallery-section reverse">
+      <h3>↓ 逆位置・ターン終了時「${reverse.name}」</h3>
+      <div>${reverse.info}</div>
+      <div style="margin-top:8px;color:#9caab9;font-size:0.72rem;">逆位置は配置時の基本ダメージが逆方向になります。配置時・隣接時の通常能力は逆位置でも発動します。</div>
+    </section>
+  `;
+  document.getElementById('galleryDetail').scrollTop = 0;
+}
+
 function openHelp() {
   document.getElementById('helpBody').innerHTML = `
     <h4>目的</h4>
@@ -1881,7 +2116,8 @@ function openHelp() {
     <h4>戦闘のルール</h4>
     <ul>
       <li>手札を選び、下部の「↑ 正位置 / ↓ 逆位置」で向きを決めてから盤面のマスをクリックします（1ターン2枚まで）。</li>
-      <li>カードのあるマスには敵味方とも上書き配置できません。25マスが満杯になったらカードを回収し、手札を4枚引き直します。</li>
+       <li>カードのあるマスには敵味方とも上書き配置できません。</li>
+       <li>「アルカナバースト」：25マスがすべて埋まると、盤面の所属カード枚数が少ない側の王冠が1つ失われます（同数なら王冠は減りません）。その後盤面をリセットし、デッキ由来のカードと手札・墓地を山札に戻して4枚引き直します。</li>
        <li>戦闘中はBGMがループ再生されます。画面右上のBGMボタンでON/OFF、音量スライダーで音量を変更できます。</li>
       <li>敵が次のターンに出すカードは、右側の「敵が次に出すカード」で確認できます（置く場所はランダム）。</li>
       <li>各カードには配置時・隣に置かれた時・ターン終了時の固有効果があります。配置時と隣接時の能力は逆位置でも通常どおり発動します。</li>
@@ -1898,7 +2134,14 @@ function openHelp() {
 function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && titleVisible() && document.getElementById('helpModal').style.display !== 'flex') startGame();
+  if (e.key === 'Escape' && document.getElementById('cardGalleryModal').style.display === 'flex') {
+    closeCardGallery();
+    return;
+  }
+  if (e.key === 'Enter' && titleVisible()
+      && document.getElementById('helpModal').style.display !== 'flex'
+      && document.getElementById('cardGalleryModal').style.display !== 'flex'
+      && e.target.tagName !== 'BUTTON') startGame();
 });
 </script>
 </body>
