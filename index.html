@@ -308,7 +308,7 @@ const PLAYS_PER_TURN = 2;
 const HAND_SIZE = 4;
 const MAX_HAND = 8;
 const START_CARD = 0;   // 初期デッキに必ず入る愚者
-const DRAFT_ROUNDS = 3; // 3枚から1枚を選ぶ回数
+const DRAFT_ROUNDS = 4; // 3枚から1枚を選ぶ回数
 let draftRound = 0;
 
 let gameState = {
@@ -1273,20 +1273,20 @@ function openCardChoice(title, text, choices, onPick) {
   document.getElementById('rewardModal').style.display = 'flex';
 }
 
-// 初期デッキ作成：愚者は確定、残りは「ランダム3枚から1枚」を3回
+// 初期デッキ作成：愚者は確定、残りは「ランダム3枚から1枚」を4回
 function startDraft() {
   gameState.locked = true;
   draftRound = 0;
   updateDeckList();
   updateCrowns();
   updatePlays();
-  log("初期デッキ作成：愚者が仲間に加わった。3枚の候補から1枚を選ぶ（3回）。");
+  log("初期デッキ作成：愚者が仲間に加わった。3枚の候補から1枚を選ぶ（4回）。");
   nextDraftPick();
 }
 
 function nextDraftPick() {
   draftRound++;
-  // 所持済みは候補に出さない（初期デッキは異なる4枚になる）
+  // 所持済みは候補に出さない（初期デッキは異なる5枚になる）
   const pool = ARCANA_DATA.map(a => a.id).filter(id => !gameState.collection.includes(id));
   const choices = shuffle(pool).slice(0, 3);
   const have = gameState.collection.map(id => ARCANA_DATA[id].jp).join('、');
@@ -1510,7 +1510,7 @@ function openHelp() {
     </ul>
     <h4>流れ</h4>
     <ul>
-      <li>最初に、愚者に加えて「ランダム3枚から1枚」を3回選び、初期デッキを作ります。</li>
+      <li>最初に、愚者に加えて「ランダム3枚から1枚」を4回選び、初期デッキを作ります。</li>
       <li>その後、3つのアイテムから1つを選んでインベントリに加えます。</li>
       <li>勝つたびに3枚から1枚をデッキに加えます。所持済みのカードを選ぶと強化（ダメージ+1）されます。</li>
       <li>${enemies.length}体の駒を全て倒せばクリアです。</li>
