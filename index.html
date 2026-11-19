@@ -194,6 +194,35 @@
   .online-disclaimer {font-size:.72rem;color:#8b93a5;line-height:1.6;}
   #onlineLobby {z-index:2200;}
   .pvp-turn-banner { display:inline-block; color:#fff; padding:4px 9px; font-weight:bold; border-radius:5px; background:#305b88; }
+  /* 対戦中は待機画面で盤面を覆わず、観戦中であることだけを表示する。 */
+  .online-watch-pill[hidden] {display:none !important;}
+  .online-watch-pill {
+    position:absolute; z-index:20; top:12px; left:50%; transform:translateX(-50%);
+    padding:9px 16px; border:1px solid #c5a059; border-radius:24px;
+    background:rgba(10,12,21,.88); color:#ffdf9f; font-size:.82rem;
+    font-weight:bold; text-align:center; pointer-events:none;
+    box-shadow:0 4px 18px rgba(0,0,0,.5); white-space:nowrap;
+    max-width:calc(100% - 20px); overflow:hidden; text-overflow:ellipsis;
+  }
+  .online-card-back {
+    border-color:#72582b; cursor:default;
+    background:radial-gradient(ellipse at 50% 45%,#3c2d55,#121725 76%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .online-card-back::before {
+    content:'✦'; display:flex; align-items:center; justify-content:center;
+    color:#dbbd79; font-size:2.2rem; width:74%; height:82%;
+    border:2px double #9c7a3a; border-radius:5px;
+    text-shadow:0 0 13px rgba(243,156,18,.5);
+  }
+  .online-card-back:hover {transform:none; border-color:#72582b; box-shadow:0 4px 10px rgba(0,0,0,.5);}
+  .online-hidden-hand-label {font-size:.76rem; color:#c5a059; margin-left:7px; white-space:nowrap;}
+  .hand-bar.online-spectating .orientation-btn,
+  .hand-bar.online-spectating .hand-card {cursor:default;}
+  @media(max-width:780px) {
+    .online-watch-pill {top:6px;font-size:.68rem;padding:6px 10px;}
+    .online-hidden-hand-label {font-size:.64rem; white-space:normal; max-width:85px;}
+  }
   #titleScreen {
     position: fixed; inset: 0; z-index: 800; overflow: hidden;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
@@ -497,6 +526,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
 
   <div class="canvas-wrap" id="canvasWrap">
     <canvas id="gameCanvas"></canvas>
+    <div id="onlineWatchPill" class="online-watch-pill" hidden role="status">👁 相手のターン中 · 盤面を観戦できます</div>
     <div id="arcanaBurstNotice" class="arcana-burst-notice" aria-live="polite"></div>
   </div>
 
@@ -882,26 +912,33 @@ function pvpDealInitial() {
 }
 function pvpRefreshUI() {
   if (!gameState.pvp) return;
-  const cur = gameState.pvp.active+1, other = cur===1?2:1;
+  const cur = gameState.pvp.active+1;
+  // 右欄の「対戦相手」は現在の手番ではなく、この端末の対戦相手を表示する。
+  const other = onlineGame.role === 'guest' ? 1 : 2;
+  const opponent = gameState.pvp.players[other-1];
+  const opponentDeckCount = opponent.deckCount ?? opponent.deck.length;
   document.getElementById('turnNum').textContent = gameState.turn;
   document.getElementById('turnLabel').textContent = '手番';
   document.getElementById('playerCrownLabel').textContent = 'P1 王冠';
   document.getElementById('enemyCrownLabel').textContent = 'P2 王冠';
   document.getElementById('deckHeading').innerHTML = `P${cur} のデッキ (<span id="deckCount">22</span>)`;
   document.getElementById('enemyName').textContent = `プレイヤー${other}（${other===1?'青':'赤'}）`;
-  document.getElementById('enemyDesc').textContent = `手札 ${gameState.pvp.players[other-1].hand.length}枚 / 山札 ${gameState.pvp.players[other-1].deck.length}枚。相手の手札は見えません。`;
-  document.getElementById('statusBadges').innerHTML = `<span class="pvp-turn-banner" style="background:${cur===1?'#305b88':'#8e3434'}">P${cur} の番</span>`;
+  document.getElementById('enemyDesc').textContent = `手札 ${opponent.hand.length}枚 / 山札 ${opponentDeckCount}枚。相手の手札は見えません。`;
+  const viewing = !onlineMyTurn();
+  document.getElementById('statusBadges').innerHTML = `<span class="pvp-turn-banner" style="background:${cur===1?'#305b88':'#8e3434'}">P${cur} の番</span>`
+    + (viewing ? ' <span style="color:#e6c483">👁 観戦中</span>' : '');
   updateCrowns(); updatePlays(); updateDeckList(); renderHandUI(); draw();
 }
 function pvpPassToCurrent() {
   if (!gameState.pvp || !onlineGame.role) return;
-  const own = onlineGame.role === 'host' ? 0 : 1;
-  const waiting = gameState.pvp.active !== own;
-  const pass = document.getElementById('pvpPass');
-  pass.hidden = !waiting || gameState.locked;
-  if (waiting) {
-    document.getElementById('pvpPassTitle').textContent = '相手のターンです';
-    document.getElementById('pvpPassInfo').textContent = `P1 王冠 ${gameState.playerCrowns}　/　P2 王冠 ${gameState.enemyCrowns}。相手の操作が終わると自動で切り替わります。`;
+  const waiting = !onlineMyTurn();
+  // 相手のターン中も盤面・ログ・カード詳細を閲覧できるようにする。
+  // 通信切断時だけは既存の全面案内を残す。
+  if (!gameState.locked) document.getElementById('pvpPass').hidden = true;
+  document.getElementById('onlineWatchPill').hidden = !waiting || gameState.locked;
+  document.getElementById('handBar').classList.toggle('online-spectating', waiting);
+  for (const id of ['endTurnBtn', 'uprightBtn', 'reverseBtn']) {
+    document.getElementById(id).disabled = waiting || gameState.locked;
   }
 }
 function startVersus() {
@@ -924,7 +961,7 @@ function startVersus() {
   document.getElementById('encounterHeading').textContent='対戦相手';
   document.getElementById('enemyNextHeading').style.display='none';
   document.getElementById('enemyNext').style.display='none';
-  document.getElementById('systemInfoText').innerHTML='オンライン対戦（P1＝青、P2＝赤）。各プレイヤーは22枚ずつのデッキと愚者を含む初期手札4枚で開始。1ターン2枚まで配置できます。<br>正位置／逆位置を選んで空きマスへ配置し、相手の王冠3つを先に破壊すれば勝利。アイテム・ゴールド・ショップ・強化はありません。<br>アルカナバースト：25マスが埋まると枚数の少ない陣営の王冠が1つ減り、双方のデッキを回収して4枚引き直します。<br>相手のターン中は手札を隠し、操作できません。通信が切れると対戦を中断します。';
+  document.getElementById('systemInfoText').innerHTML='オンライン対戦（P1＝青、P2＝赤）。各プレイヤーは22枚ずつのデッキと愚者を含む初期手札4枚で開始。1ターン2枚まで配置できます。<br>正位置／逆位置を選んで空きマスへ配置し、相手の王冠3つを先に破壊すれば勝利。アイテム・ゴールド・ショップ・強化はありません。<br>アルカナバースト：25マスが埋まると枚数の少ない陣営の王冠が1つ減り、双方のデッキを回収して4枚引き直します。<br>相手のターン中も盤面やログ、配置済みカードの効果を確認できます。相手の手札は非公開で、自分の配置操作はできません。通信が切れると対戦を中断します。';
   document.getElementById('enemyNext').innerHTML='';
   renderInventory();updateStatus();pvpRefreshUI();resizeCanvas();
   log('🌐 オンライン対戦開始！ 双方22枚、初期手札4枚。');
@@ -965,6 +1002,7 @@ function finishPvp(winnerIndex) {
   if(!gameState.pvp || (gameState.locked && onlineGame.role!=='guest')) return;
   gameState.locked=true;stopBattleBgm();
   document.getElementById('pvpPass').hidden=true;
+  document.getElementById('onlineWatchPill').hidden=true;
   document.getElementById('endTitle').textContent=`🏆 プレイヤー${winnerIndex+1}の勝利！`;
   document.getElementById('endText').textContent=`プレイヤー${winnerIndex+1}が相手の王冠をすべて破壊しました。対戦終了！`;
   document.getElementById('endModal').style.display='flex';
@@ -1137,6 +1175,7 @@ function onlineDisconnected(msg) {
   onlineGame.pending=true;
   gameState.locked=true;
   stopBattleBgm();
+  document.getElementById('onlineWatchPill').hidden=true;
   const el=document.getElementById('pvpPass');
   document.getElementById('pvpPassTitle').textContent='通信が切断されました';
   document.getElementById('pvpPassInfo').textContent=msg+' 対戦を終了する場合はタイトルへ戻ってください。';
@@ -1148,6 +1187,7 @@ function onlineBuildSnapshot(meta) {
   const pvp=JSON.parse(JSON.stringify(gameState.pvp));
   // ホストP1の手札は相手側へ内容を知らせず、枚数だけ維持する。
   pvp.players[0].hand=pvp.players[0].hand.map(()=>0);
+  pvp.players[0].deckCount=pvp.players[0].deck.length;
   pvp.players[0].deck=[];
   return {
     type:'state',version:1,meta,turn:gameState.turn,
@@ -2091,6 +2131,25 @@ function renderHandUI() {
   updateOrientationUI();
   const bar = document.getElementById('handCards');
   bar.innerHTML = '';
+  if (gameState.pvp && onlineGame.role && !onlineMyTurn()) {
+    // ホストの内部状態には相手の本当の手札があるが、画面には裏面だけを表示する。
+    // ゲストはホストの伏せられた手札を受信しているため、どちらの端末でも非公開。
+    bar.setAttribute('aria-label', '相手の手札（非公開）');
+    for (let i = 0; i < gameState.hand.length; i++) {
+      const back = document.createElement('div');
+      back.className = 'hand-card online-card-back';
+      back.setAttribute('aria-label', '相手のカード（裏面）');
+      back.title = '相手の手札（非公開）';
+      bar.appendChild(back);
+    }
+    const label=document.createElement('span');
+    label.className='online-hidden-hand-label';
+    label.textContent=`相手の手札 ${gameState.hand.length}枚（非公開）`;
+    bar.appendChild(label);
+    refreshDetail();
+    return;
+  }
+  bar.setAttribute('aria-label', '自分の手札');
   gameState.hand.forEach((cardId, idx) => {
     const card = ARCANA_DATA[cardId];
     const lv = gameState.levels[cardId] || 0;
