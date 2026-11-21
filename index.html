@@ -438,6 +438,29 @@
   .title-language-switch button.active {border-color:#f3c574;background:#5a4423;color:#fff0c8;box-shadow:0 0 9px rgba(243,156,18,.18);}
   @media (max-width:620px) {.title-language-switch{top:8px;right:8px}.title-language-switch span{display:none}}
 
+  /* ===== 持ち帰りゴールド / キャラクター解禁 ===== */
+  .title-wallet {display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap;
+    padding:6px 13px;border:1px solid #6e5a32;border-radius:8px;background:rgba(12,14,20,.8);
+    color:#e9d5a5;font-size:.81rem;letter-spacing:.02em}
+  .title-wallet strong,.character-wallet strong {color:#ffe39b;font-size:1rem}
+  .wallet-sep {color:#766744;margin:0 5px}
+  .character-heading-actions {display:flex;align-items:flex-end;gap:12px;flex-direction:column}
+  .character-wallet {display:flex;gap:5px;align-items:center;background:#101117;border:1px solid #665432;
+    color:#d3c29c;font-size:.8rem;border-radius:7px;padding:7px 10px;white-space:nowrap}
+  .character-wallet img,.title-wallet img {width:24px;height:24px;object-fit:contain}
+  .character-choice.locked {border-color:#554957;background:linear-gradient(160deg,#211e26,#121217 80%)}
+  .character-choice.locked .character-art {filter:grayscale(.75);opacity:.6}
+  .character-lock-status {min-height:2.5em;padding:7px 8px;border-radius:6px;border:1px solid #736047;
+    color:#dfc38f;font-size:.72rem;line-height:1.4}
+  .character-choice button:disabled {opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
+  .character-choice button:disabled:hover {background:#4a3925}
+  .character-unlock-feedback {margin:10px 0 0;color:#f5ce8b;font-size:.79rem;min-height:1.2em}
+  .end-wallet-result {margin:14px auto;padding:13px 16px;background:#141722;border:1px solid #9b7b48;
+    color:#e8d4a8;border-radius:8px;max-width:460px;line-height:1.7;font-size:.91rem}
+  .end-wallet-result strong {color:#ffe49d;font-size:1.13rem}
+  .end-wallet-result[hidden] {display:none}
+  @media(max-width:620px){.title-wallet{max-width:90vw;font-size:.72rem}.character-heading-actions{align-items:flex-end}.character-wallet{font-size:.7rem;padding:5px}}
+
   /* ===== 冒険者選択（1人用） ===== */
   .character-modal { z-index: 1100; }
   .character-modal .modal-content { max-width: 1040px; width: min(96vw, 1040px); max-height: 93vh; text-align:left; padding:24px; }
@@ -483,6 +506,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <span>LANGUAGE</span><button id="langJP" type="button" onclick="setArcanaLanguage('ja')" aria-pressed="true">JP</button><button id="langEN" type="button" onclick="setArcanaLanguage('en')" aria-pressed="false">EN</button>
   </div>
   <div class="t-sub">運命の22アルカナ</div>
+  <div class="title-wallet" aria-live="polite"><img class="gold-coin" data-gold-icon alt="" aria-hidden="true"><span class="wallet-caption">持ち帰りゴールド</span> <strong id="titleBankGold">0</strong> G <span class="wallet-sep">·</span> <span class="clear-caption">クリア回数</span> <strong id="titleClearCount">0</strong></div>
   <div class="fan" id="titleFan"></div>
   <div class="t-btns">
     <button class="t-btn main" onclick="startGame()">はじめる</button>
@@ -505,10 +529,14 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
         <h2 id="characterSelectTitle">キャラクター選択</h2>
         <p>冒険に出るキャラクターを選んでください。初期デッキと固有能力が異なります。</p>
       </div>
-      <button type="button" onclick="closeCharacterSelection()">戻る</button>
+      <div class="character-heading-actions">
+        <div class="character-wallet"><img class="gold-coin" data-gold-icon alt="" aria-hidden="true"><span>持ち帰りゴールド</span> <strong id="characterBankGold">0</strong> G</div>
+        <button type="button" onclick="closeCharacterSelection()">戻る</button>
+      </div>
     </div>
     <div class="character-grid" id="characterGrid"></div>
-    <p class="character-notice">※ 探求者以外は初期デッキが固定です。商人はアイテム選択を行わず、3個所持して開始します。復讐者の能力は各戦闘で1回使用できます。</p>
+    <p class="character-notice">※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は1000Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。</p>
+    <p id="characterUnlockFeedback" role="status" aria-live="polite" class="character-unlock-feedback"></p>
   </div>
 </div>
 
@@ -691,6 +719,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
   <div class="modal-content">
     <h2 id="endTitle" style="color:var(--gold); margin-top:0;"></h2>
     <p id="endText" style="font-size:0.9rem; color:#aaa;"></p>
+    <div id="endWalletResult" class="end-wallet-result" hidden aria-live="polite"></div>
     <button onclick="location.reload()">タイトルへ戻る</button>
   </div>
 </div>
@@ -730,6 +759,77 @@ const START_GOLD = 99;
 const GOLD_REWARD_MIN = 10;
 const GOLD_REWARD_MAX = 20;
 const DUPLICATE_GOLD = 15; // 重複アルカナの報酬：強化ではなく15Gを獲得
+const MERCHANT_GOLD_MULTIPLIER = 1.2;
+function awardedGold(base) {
+  // 商人の固有能力は冒険中に新しく獲得した報酬にだけ適用する。
+  // 初期ゴールド、購入による支払い、冒険終了時の持ち帰り金には適用しない。
+  const merchant = !gameState.pvp && !tutorial.active && gameState.characterId === 'merchant';
+  return merchant ? Math.floor(base * MERCHANT_GOLD_MULTIPLIER + 1e-9) : base;
+}
+
+/* ===== 冒険の持ち帰り金・解禁状況（プレイヤーのブラウザに永続保存） =====
+   戦闘中のgameState.goldと、次回以降の解禁購入に使うbankGoldは別管理。
+   既存の初期99Gは各冒険の開始時に支給され、残額は結末で全額持ち帰る。 */
+const PROGRESSION_STORAGE_KEY = 'arcanaRogueProgressV1';
+const CHARACTER_UNLOCK_COSTS = { merchant: 500, avenger: 1000 };
+let progressionStorageAvailable = true;
+function loadProgression() {
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(PROGRESSION_STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (_) { progressionStorageAvailable = false; }
+  if (!saved || typeof saved !== 'object') saved = {};
+  const validInt = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+  const clears = validInt(saved.clears);
+  const unlocked = saved.unlocked && typeof saved.unlocked === 'object' ? saved.unlocked : {};
+  return { bankGold: validInt(saved.bankGold), clears,
+    unlocked: { seeker: true, nun: clears >= 1, merchant: unlocked.merchant === true, avenger: unlocked.avenger === true } };
+}
+const progression = loadProgression();
+function saveProgression() {
+  try { localStorage.setItem(PROGRESSION_STORAGE_KEY, JSON.stringify(progression)); progressionStorageAvailable=true; }
+  catch (_) { progressionStorageAvailable=false; }
+}
+function isCharacterUnlocked(id) {
+  return id==='seeker' || (id==='nun' && progression.clears>=1) || progression.unlocked[id]===true;
+}
+function updateProgressionUI() {
+  const bank=document.getElementById('titleBankGold');
+  const count=document.getElementById('titleClearCount');
+  const characterBank=document.getElementById('characterBankGold');
+  if(bank)bank.textContent=progression.bankGold.toLocaleString('ja-JP');
+  if(count)count.textContent=progression.clears;
+  if(characterBank)characterBank.textContent=progression.bankGold.toLocaleString('ja-JP');
+}
+function purchaseCharacterUnlock(id) {
+  if (!titleVisible() || document.getElementById('characterModal').style.display!=='flex') return;
+  const price=CHARACTER_UNLOCK_COSTS[id];
+  if(!price || isCharacterUnlocked(id))return;
+  const message=document.getElementById('characterUnlockFeedback');
+  if(progression.bankGold < price) {
+    message.textContent=`ゴールドが足りません。解禁には${price}G必要です。`;
+    return;
+  }
+  progression.bankGold -= price;
+  progression.unlocked[id] = true;
+  saveProgression(); updateProgressionUI();
+  renderCharacterChoices();
+  message.textContent=`${CHARACTER_PRESETS.find(c=>c.id===id).name}を解禁しました！`;
+}
+function depositRunGold(win) {
+  if(gameState.runResultCommitted || !currentCharacter() || gameState.pvp || tutorial.active) return null;
+  gameState.runResultCommitted = true;
+  const earned = Math.max(0, Math.floor(gameState.gold));
+  progression.bankGold += earned;
+  if(win) {
+    progression.clears++;
+    progression.unlocked.nun=true;
+  }
+  saveProgression();
+  updateProgressionUI();
+  return { earned, bank: progression.bankGold, nunUnlocked: win && progression.clears===1 };
+}
 
 /* ===== 戦闘BGM =====
    ブラウザの自動再生制限を考慮し、最初の戦闘開始（アイテム選択クリック）で再生します。
@@ -881,6 +981,7 @@ function completeTutorial() {
   gameState.locked = true;
   stopBattleBgm();
   updateTutorialGuide();
+  document.getElementById('endWalletResult').hidden=true;
   document.getElementById('endTitle').textContent = '🎓 チュートリアルクリア！';
   document.getElementById('endText').innerHTML = 'カードを選んで配置し、ターンを終了し、アイテムを使って敵の王冠を破壊できました！<br>本編では<b>敵の王冠が0で勝利／自分の王冠が0で敗北</b>です。<br>さらに、<b>25マスすべてが埋まると「アルカナバースト」</b>が起こり、カードの少ない陣営の王冠が1つ減ります。<br>タイトルへ戻って「はじめる」から本編に挑戦しましょう。';
   document.getElementById('endModal').style.display = 'flex';
@@ -922,7 +1023,8 @@ let gameState = {
   extraTurn: false, // 懐中時計：追加ターン予約
   inEnemyTurn: false, // 敵の配置アニメーション・効果の処理中
   fullBoardRedrawDuringEnemy: false, // 敵ターン中の満杯リセットで4枚引き直し済み
-  locked: false
+  locked: false,
+  runResultCommitted: false // 同じ冒険の持ち帰りを二重加算しない
 };
 gameState.levels[START_CARD] = 0;
 
@@ -1062,6 +1164,7 @@ function finishPvp(winnerIndex) {
   gameState.locked=true;stopBattleBgm();
   document.getElementById('pvpPass').hidden=true;
   document.getElementById('onlineWatchPill').hidden=true;
+  document.getElementById('endWalletResult').hidden=true;
   document.getElementById('endTitle').textContent=`🏆 プレイヤー${winnerIndex+1}の勝利！`;
   document.getElementById('endText').textContent=`プレイヤー${winnerIndex+1}が相手の王冠をすべて破壊しました。対戦終了！`;
   document.getElementById('endModal').style.display='flex';
@@ -2754,7 +2857,7 @@ function openCardChoice(title, text, choices, onPick) {
       <div class="card-name" style="font-size:0.9rem;">#${id} ${ARCANA_DATA[id].jp}</div>
       <div class="reward-eff">ダメージ ${basePush(id)}<br>${EFFECTS[id].info.map(([t, x]) => `<span class="trig">【${t}】</span>${x}`).join('<br>')}<br><span class="trig">【逆位置：${REVERSE_EFFECTS[id].name}】</span>${REVERSE_EFFECTS[id].info}</div>
       <div style="margin-top:auto;">${owned
-        ? `<span class="tag-up">重複 +${DUPLICATE_GOLD}G</span>`
+        ? `<span class="tag-up">重複 +${awardedGold(DUPLICATE_GOLD)}G</span>`
         : `<span class="tag-new">NEW</span>`}</div>
     `;
     el.onclick = () => onPick(id);
@@ -3091,7 +3194,8 @@ function leaveShop() {
 function triggerVictory() {
   stopBattleBgm();
   gameState.locked = true;
-  const rewardGold = randomInt(GOLD_REWARD_MIN, GOLD_REWARD_MAX);
+  const baseGold = randomInt(GOLD_REWARD_MIN, GOLD_REWARD_MAX);
+  const rewardGold = awardedGold(baseGold);
   gameState.gold += rewardGold;
   updateGold();
   log(`🏆 敵を打ち倒した！ 🪙 ${rewardGold}G獲得（所持${gameState.gold}G）`);
@@ -3104,7 +3208,7 @@ function triggerVictory() {
   const choices = shuffle(ARCANA_DATA.map(a => a.id)).slice(0, 3);
   openCardChoice(
     "勝利！ 報酬アルカナを選択",
-    `今回の戦闘でゴールドを獲得しました（現在${gameState.gold}G）。新しいアルカナを1枚獲得できます。所持済みなら15Gを受け取ります。`,
+    `今回の戦闘でゴールドを獲得しました（現在${gameState.gold}G）。新しいアルカナを1枚獲得できます。所持済みなら${awardedGold(DUPLICATE_GOLD)}Gを受け取ります。`,
     choices,
     pickReward
   );
@@ -3112,9 +3216,10 @@ function triggerVictory() {
 
 function pickReward(id) {
   if (gameState.collection.includes(id)) {
-    gameState.gold += DUPLICATE_GOLD;
+    const duplicateGold = awardedGold(DUPLICATE_GOLD);
+    gameState.gold += duplicateGold;
     updateGold();
-    log(`🪙 [${ARCANA_DATA[id].jp}] は重複しているため、${DUPLICATE_GOLD}Gを獲得した！（所持${gameState.gold}G）`);
+    log(`🪙 [${ARCANA_DATA[id].jp}] は重複しているため、${duplicateGold}Gを獲得した！（所持${gameState.gold}G）`);
   } else {
     gameState.collection.push(id);
     gameState.levels[id] = 0;
@@ -3138,10 +3243,19 @@ function gameOver() {
 
 function showEnd(win) {
   stopBattleBgm();
+  const result = depositRunGold(win); // 二重実行防止済み・オンライン/練習戦では無効
   document.getElementById('endTitle').textContent = win ? "🌟 運命を超えた — GAME CLEAR" : "ゲームオーバー";
   document.getElementById('endText').textContent = win
     ? "ポーンからキングまで、6体の駒を全て打ち倒し、22のアルカナの審判を乗り越えました。"
     : "運命は途絶えました…。";
+  const wallet=document.getElementById('endWalletResult');
+  if(result) {
+    wallet.hidden=false;
+    wallet.innerHTML=`<div>🪙 持ち帰ったゴールド：<strong>${result.earned.toLocaleString('ja-JP')} G</strong></div>`
+      + `<div>累計所持ゴールド：<strong>${result.bank.toLocaleString('ja-JP')} G</strong></div>`
+      + (result.nunUnlocked ? `<div style="color:#9ee2b9;font-weight:bold">✨ 修道女が解禁されました！</div>` : '');
+    log(`🪙 ${result.earned}Gを持ち帰った。所持金${result.bank}G。`);
+  } else wallet.hidden=true;
   document.getElementById('endModal').style.display = 'flex';
 }
 
@@ -3152,13 +3266,14 @@ const CHARACTER_PRESETS = [
    deckText:'愚者・女教皇・女帝・恋人・魔術師', ability:'王冠4つで冒険を開始する。回復の上限も4つ。', sample:[2,3,6]},
   {id:'merchant', name:'商人', deck:[0,14,17,8,10], draft:false, crowns:3,
    items:['knife','blood','watch'], deckText:'愚者・節制・星・力・運命の輪',
-   ability:'儀礼ナイフ・輸血液・懐中時計を各1個持って冒険を開始する。', sample:[14,17,10]},
+   ability:'儀礼ナイフ・輸血液・懐中時計を各1個持って冒険を開始する。獲得ゴールド+20％。', sample:[14,17,10]},
   {id:'avenger', name:'復讐者', deck:[0,15,13,12,7], draft:false, crowns:3, items:[],
    deckText:'愚者・悪魔・死神・吊るされた男・戦車',
    ability:'各戦闘で1度だけ、ボタンを押して配置回数を+1できる。', sample:[15,13,7]}
 ];
 
 initGame();
+updateProgressionUI();
 updateBattleBgmUi();
 
 /* ===== タイトル画面 ===== */
@@ -3191,11 +3306,19 @@ function startGame() {
   openCharacterSelection();
 }
 function openCharacterSelection() {
+  updateProgressionUI();
+  renderCharacterChoices();
+  const msg=document.getElementById('characterUnlockFeedback');
+  msg.textContent=progressionStorageAvailable ? '' : 'このブラウザでは進行状況を保存できません。保存設定をご確認ください。';
+  document.getElementById('characterModal').style.display='flex';
+}
+function renderCharacterChoices() {
   const grid=document.getElementById('characterGrid');
   grid.innerHTML='';
   for(const char of CHARACTER_PRESETS) {
+    const unlocked=isCharacterUnlocked(char.id);
     const panel=document.createElement('section');
-    panel.className='character-choice';
+    panel.className='character-choice'+(unlocked?'':' locked');
     const header=document.createElement('h3');
     header.className='character-name';header.textContent=char.name;
     const images=document.createElement('div');images.className='character-art';
@@ -3209,20 +3332,35 @@ function openCharacterSelection() {
     const deckText=document.createElement('div');deckText.className='character-deck';deckText.textContent=char.deckText;
     const abilityLabel=document.createElement('div');abilityLabel.className='character-label';abilityLabel.textContent='固有能力';
     const ability=document.createElement('div');ability.className='character-ability';ability.textContent=char.ability;
-    const button=document.createElement('button');button.type='button';button.textContent='このキャラで始める';
-    button.setAttribute('aria-label',`${char.name}で開始`);
-    button.addEventListener('click',()=>chooseCharacter(char.id));
-    panel.append(header,images,deckLabel,deckText,abilityLabel,ability,button);
+    const lockStatus=document.createElement('div');lockStatus.className='character-lock-status';
+    if(unlocked) lockStatus.textContent='🔓 解禁済み';
+    else if(char.id==='nun') lockStatus.textContent=`🔒 クリア1回で解禁（${progression.clears}/1）`;
+    else lockStatus.textContent=`🔒 ${CHARACTER_UNLOCK_COSTS[char.id]}Gで解禁`; 
+    const button=document.createElement('button');button.type='button';
+    if(unlocked) {
+      button.textContent='このキャラで始める';
+      button.setAttribute('aria-label',`${char.name}で開始`);
+      button.addEventListener('click',()=>chooseCharacter(char.id));
+    } else if(char.id==='nun') {
+      button.textContent='1回クリアで解禁';button.disabled=true;
+    } else {
+      const price=CHARACTER_UNLOCK_COSTS[char.id];
+      button.textContent=`${price}Gで解禁`;
+      button.disabled=progression.bankGold<price;
+      button.setAttribute('aria-label',`${char.name}を${price}Gで解禁`);
+      button.addEventListener('click',()=>purchaseCharacterUnlock(char.id));
+    }
+    panel.append(header,images,deckLabel,deckText,abilityLabel,ability,lockStatus,button);
     grid.append(panel);
   }
-  document.getElementById('characterModal').style.display='flex';
+  updateProgressionUI();
 }
 function closeCharacterSelection() {
   document.getElementById('characterModal').style.display='none';
 }
 function chooseCharacter(id) {
   const char=CHARACTER_PRESETS.find(c=>c.id===id);
-  if(!char || !titleVisible() || document.getElementById('characterModal').style.display!=='flex')return;
+  if(!char || !isCharacterUnlocked(id) || !titleVisible() || document.getElementById('characterModal').style.display!=='flex')return;
   closeCharacterSelection();
   tutorial.active=false;
   gameState.pvp=null;
@@ -3236,6 +3374,7 @@ function chooseCharacter(id) {
   gameState.gold=START_GOLD;
   gameState.shopVisited=false;
   gameState.shopRemovalCount=0;
+  gameState.runResultCommitted=false;
   gameState.locked=true;
   shopStock=null;
   document.getElementById('titleScreen').style.display='none';
@@ -3356,9 +3495,12 @@ function openHelp() {
       <li>ゲーム開始時に「探求者」「修道女」「商人」「復讐者」から主人公を選びます。</li>
       <li>探求者は愚者＋4回のドラフト。他の3人は専用の固定5枚で開始します。</li>
       <li>探求者・修道女・復讐者は初期アイテムを1つ選択。商人はアイテム3種類を各1つ持って開始します（所持上限3個）。</li>
+      <li>商人は敵撃破・重複カードの獲得ゴールドが+20％（端数切り捨て）になります。初期99Gと持ち帰る際の加算は増えません。</li>
       <li>修道女は王冠4つ（回復上限も4）。復讐者は各戦闘1回、追加配置+1を使えます。</li>
       <li>勝つたびに10～20Gを入手し、3枚から1枚を選びます。所持済みを選ぶと15Gが手に入ります（強化はありません）。</li>
-      <li>初期ゴールドは99G。3体目（ビショップ）を倒し報酬を選ぶと、一度だけ「アルカナ商店」が現れます。</li>
+      <li>各冒険は99Gで開始。クリアまたは敗北したら残りのゴールドを持ち帰り、タイトル画面の所持金に加算します。</li>
+      <li>最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は1000Gを持ち帰りゴールドから支払って解禁します。</li>
+      <li>3体目（ビショップ）を倒し報酬を選ぶと、一度だけ「アルカナ商店」が現れます。</li>
       <li>ショップにはアイテム3品、未所持カード5枚（各99～129G）、不要なカードの削除（初回75G、次から25Gずつ値上げ）があります。アイテム所持上限は3個です。</li>
       <li>${enemies.length}体の駒を全て倒せばクリアです。</li>
     </ul>
@@ -3432,7 +3574,7 @@ document.addEventListener('keydown', e => {
   STRINGS["儀礼ナイフ・輸血液・懐中時計を各1個持って冒険を開始する。"] = "Begin with one Ritual Knife, Blood Transfusion, and Pocket Watch.";
   STRINGS["各戦闘で1度だけ、ボタンを押して配置回数を+1できる。"] = "Once per battle, press the ability button to gain +1 placement.";
   STRINGS["このキャラで始める"] = "Choose Character";
-  STRINGS["※ 探求者以外は初期デッキが固定です。商人はアイテム選択を行わず、3個所持して開始します。復讐者の能力は各戦闘で1回使用できます。"] = "Note: Only the Seeker drafts a deck. The Merchant skips the item pick and starts with three items. The Avenger can use their ability once per battle.";
+  STRINGS["※ 探求者以外は初期デッキが固定です。商人はアイテム3個と獲得ゴールド+20％で開始します。復讐者の能力は各戦闘で1回使用できます。"] = "Note: Only the Seeker drafts a deck. The Merchant skips the item pick and starts with three items. The Avenger can use their ability once per battle.";
   STRINGS["⚔ 追加配置 +1"] = "⚔ Extra Placement +1";
   STRINGS["⚔ 追加配置 使用済み"] = "⚔ Ability Used";
   STRINGS["復讐者：この戦闘で1回だけ配置回数+1"] = "Avenger: Gain +1 placement once per battle";
@@ -3442,6 +3584,10 @@ document.addEventListener('keydown', e => {
   STRINGS["探求者は愚者＋4回のドラフト。他の3人は専用の固定5枚で開始します。"] = "The Seeker drafts four cards alongside The Fool; other characters start with five fixed cards.";
   STRINGS["探求者・修道女・復讐者は初期アイテムを1つ選択。商人はアイテム3種類を各1つ持って開始します（所持上限3個）。"] = "Seeker, Nun, and Avenger choose one starting item. Merchant starts with three different items (maximum inventory: 3).";
   STRINGS["修道女は王冠4つ（回復上限も4）。復讐者は各戦闘1回、追加配置+1を使えます。"] = "Nun starts with 4 crowns (maximum 4). Avenger may add one placement once per battle.";
+  STRINGS['儀礼ナイフ・輸血液・懐中時計を各1個持って冒険を開始する。獲得ゴールド+20％。'] = 'Start with one Ritual Knife, Blood Transfusion, and Pocket Watch. Gain 20% more gold from rewards.';
+  STRINGS['※ 探求者以外は初期デッキが固定です。商人はアイテム3個と獲得ゴールド+20％で開始します。復讐者の能力は各戦闘で1回使用できます。'] = 'Note: Only the Seeker drafts a deck. The Merchant starts with three items and earns 20% more gold. The Avenger can use their ability once per battle.';
+  STRINGS['商人は敵撃破・重複カードの獲得ゴールドが+20％（端数切り捨て）になります。初期99Gと持ち帰る際の加算は増えません。'] = 'Merchant earns 20% more gold from defeated enemies and duplicate cards (rounded down). Starting 99G and banking gold receive no extra bonus.';
+  STRINGS['所持済みなら18Gを受け取ります。'] = 'Duplicates reward 18G.';
   // vNext: Enemy strategy, duplicate-card gold, and card-removal shop.
   Object.assign(STRINGS, {
     "カード削除":"Remove a Card",
@@ -3467,6 +3613,27 @@ document.addEventListener('keydown', e => {
     "所持済み":"Already owned",
     "新しいアルカナを1枚獲得できます。":"Choose one new Arcana card.",
     "次の削除料金は":"Next removal price: "
+  });
+  Object.assign(STRINGS, {
+    '持ち帰りゴールド':'Saved Gold',
+    '累計所持ゴールド':'Total Saved Gold',
+    'クリア回数':'Clears',
+    '🔓 解禁済み':'🔓 Unlocked',
+    '解禁済み':'Unlocked',
+    '🔒 クリア1回で解禁（':'🔒 Clear one run to unlock (',
+    '1回クリアで解禁':'Unlock after 1 clear',
+    '500Gで解禁':'Unlock for 500G',
+    '1000Gで解禁':'Unlock for 1000G',
+    'を解禁しました！':' unlocked!',
+    '解禁には':'Unlock cost: ',
+    'ゴールドが足りません。':'Not enough gold. ',
+    '必要です。':' required.',
+    '持ち帰ったゴールド':'Gold brought back',
+    '修道女が解禁されました！':'Nun unlocked!',
+    'このブラウザでは進行状況を保存できません。保存設定をご確認ください。':'Progress cannot be saved in this browser. Please check your storage settings.',
+    '※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は1000Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。': 'Seeker is available at the start. Unlock Nun by clearing a run once; unlock Merchant for 500G and Avenger for 1000G. Progress is saved in this browser.',
+    '各冒険は99Gで開始。クリアまたは敗北したら残りのゴールドを持ち帰り、タイトル画面の所持金に加算します。':'Each run starts with 99G. After a clear or defeat, all remaining gold is added to your saved gold.',
+    '最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は1000Gを持ち帰りゴールドから支払って解禁します。':'Seeker starts unlocked. Clear a run once to unlock Nun, or spend saved gold to unlock Merchant (500G) and Avenger (1000G).'
   });
   const SORTED = Object.keys(STRINGS).sort((a,b)=>b.length-a.length);
   const exact = Object.create(null);
