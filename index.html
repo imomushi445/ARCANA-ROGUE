@@ -506,7 +506,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <span>LANGUAGE</span><button id="langJP" type="button" onclick="setArcanaLanguage('ja')" aria-pressed="true">JP</button><button id="langEN" type="button" onclick="setArcanaLanguage('en')" aria-pressed="false">EN</button>
   </div>
   <div class="t-sub">運命の22アルカナ</div>
-  <div class="title-wallet" aria-live="polite"><img class="gold-coin" data-gold-icon alt="" aria-hidden="true"><span class="wallet-caption">持ち帰りゴールド</span> <strong id="titleBankGold">0</strong> G <span class="wallet-sep">·</span> <span class="clear-caption">クリア回数</span> <strong id="titleClearCount">0</strong></div>
+  <div class="title-wallet" aria-live="polite"><span class="clear-caption">クリア回数</span> <strong id="titleClearCount">0</strong></div>
   <div class="fan" id="titleFan"></div>
   <div class="t-btns">
     <button class="t-btn main" onclick="startGame()">はじめる</button>
@@ -795,10 +795,8 @@ function isCharacterUnlocked(id) {
   return id==='seeker' || (id==='nun' && progression.clears>=1) || progression.unlocked[id]===true;
 }
 function updateProgressionUI() {
-  const bank=document.getElementById('titleBankGold');
   const count=document.getElementById('titleClearCount');
   const characterBank=document.getElementById('characterBankGold');
-  if(bank)bank.textContent=progression.bankGold.toLocaleString('ja-JP');
   if(count)count.textContent=progression.clears;
   if(characterBank)characterBank.textContent=progression.bankGold.toLocaleString('ja-JP');
 }
