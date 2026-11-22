@@ -31,6 +31,83 @@
   .stats { display: flex; gap: 20px; align-items: center; font-size: 0.95rem; }
   .crowns { display: inline-flex; gap: 5px; font-size: 1.2rem; }
 
+  /* Crown break: small crown grows, cracks, then breaks into shards. */
+  .crown-token { display:inline-block; text-align:center; line-height:1; min-width:1.08em; }
+  .crown-break-fx {
+    position:fixed; width:112px; height:112px; pointer-events:none;
+    z-index:2300; transform:translate(-50%, -50%);
+    filter:drop-shadow(0 0 8px rgba(255,185,64,.42));
+    animation:crown-fx-out 950ms cubic-bezier(.16,.7,.3,1) both;
+  }
+  .crown-break-piece {
+    position:absolute; inset:0; display:grid; place-items:center;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+    font-size:54px; line-height:1;
+    text-shadow:0 0 9px rgba(255,184,40,.85);
+    will-change:transform,opacity;
+  }
+  .crown-break-piece.left {
+    clip-path:polygon(0 0,63% 0,45% 30%,56% 46%,43% 66%,52% 100%,0 100%);
+    animation:crown-split-left 950ms cubic-bezier(.12,.65,.24,1) both;
+  }
+  .crown-break-piece.right {
+    clip-path:polygon(63% 0,100% 0,100% 100%,52% 100%,43% 66%,56% 46%,45% 30%);
+    animation:crown-split-right 950ms cubic-bezier(.12,.65,.24,1) both;
+  }
+  .crown-break-flash {
+    position:absolute; inset:22%; border:2px solid #ffd478;
+    border-radius:50%; box-shadow:0 0 18px #fbb64f, inset 0 0 12px #ffd478;
+    animation:crown-ring-burst 650ms ease-out both;
+  }
+  .crown-break-crack {
+    position:absolute; inset:0; display:grid; place-items:center;
+    color:#fff5c1; font-size:50px; font-weight:900;
+    text-shadow:0 0 8px #ffad35;
+    animation:crown-crack-flash 470ms ease-in both;
+  }
+  .crown-break-shard {
+    position:absolute; left:50%; top:50%; width:var(--w); height:var(--h);
+    background:linear-gradient(145deg,#fff2b9 0%,#ffc75a 40%,#a86615 100%);
+    clip-path:polygon(50% 0,100% 85%,4% 100%);
+    box-shadow:0 0 6px #f6b94c;
+    animation:crown-shard-burst 900ms ease-out both;
+    animation-delay:var(--delay);
+  }
+  @keyframes crown-fx-out {
+    0%,55% {opacity:1} 92% {opacity:.65} 100% {opacity:0}
+  }
+  @keyframes crown-split-left {
+    0%,24% {transform:translate(0,0) scale(.64) rotate(0);opacity:1}
+    40% {transform:translate(-5px,-3px) scale(.96) rotate(-6deg);opacity:1}
+    100% {transform:translate(-39px,31px) scale(1.05) rotate(-54deg);opacity:0}
+  }
+  @keyframes crown-split-right {
+    0%,24% {transform:translate(0,0) scale(.64) rotate(0);opacity:1}
+    40% {transform:translate(6px,0) scale(.96) rotate(7deg);opacity:1}
+    100% {transform:translate(40px,27px) scale(1.04) rotate(55deg);opacity:0}
+  }
+  @keyframes crown-ring-burst {
+    0%,25% {opacity:0; transform:scale(.28)}
+    45% {opacity:1; transform:scale(.75)}
+    100% {opacity:0; transform:scale(2.15)}
+  }
+  @keyframes crown-crack-flash {
+    0%,24% {opacity:0;transform:scale(.45)}
+    39% {opacity:1;transform:scale(.75)}
+    100% {opacity:0;transform:scale(1.15)}
+  }
+  @keyframes crown-shard-burst {
+    0%,30% {opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}
+    42% {opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100% {opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rotate)) scale(.4)}
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .crown-break-fx,.crown-break-piece,.crown-break-flash,.crown-break-crack,.crown-break-shard {
+      animation-duration: 280ms !important;
+    }
+  }
+
+
   .main-container {
     display: grid; grid-template-columns: 260px 1fr 290px;
     flex: 1; min-height: 0; overflow: hidden;
@@ -644,7 +721,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
       </div>
     </div>
     <div class="character-grid" id="characterGrid"></div>
-    <p class="character-notice">※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は1000Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。</p>
+    <p class="character-notice">※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は750Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。</p>
     <p id="characterUnlockFeedback" role="status" aria-live="polite" class="character-unlock-feedback"></p>
   </div>
 </div>
@@ -744,7 +821,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <h3>システム情報</h3>
     <div id="systemInfoText" style="font-size:0.72rem; color:#888; line-height:1.6;">
       手札を選び、画面下の「↑正位置 / ↓逆位置」で向きを選んでから盤面をクリックします（1ターン2枚まで）。<br>
-      配置時ダメージは逆位置で逆向きに働きます。逆位置カードは<strong>所有者のターン終了時に専用効果</strong>を発動します。<br>
+      基本ダメージは正位置・逆位置とも相手方向へ進みます。逆位置カードは<strong>所有者のターン終了時に専用効果</strong>を発動します。<br>
       配置済みのカードには、味方・敵ともに上書きできません。空きマスを選んでください。<br>
       25マスが埋まると「アルカナバースト」が発動！ 盤面のカード枚数が少ない側の王冠が1つ減り、その後盤面をリセットして手札を4枚引き直します。<br>
       敵を倒すと10～20Gを獲得。3体目を倒して報酬を選ぶとショップが現れます（アイテム所持は最大3個）。<br>
@@ -911,7 +988,7 @@ function awardedGold(base) {
    戦闘中のgameState.goldと、次回以降の解禁購入に使うbankGoldは別管理。
    既存の初期99Gは各冒険の開始時に支給され、残額は結末で全額持ち帰る。 */
 const PROGRESSION_STORAGE_KEY = 'arcanaRogueProgressV1';
-const CHARACTER_UNLOCK_COSTS = { merchant: 500, avenger: 1000 };
+const CHARACTER_UNLOCK_COSTS = { merchant: 500, avenger: 750 };
 let progressionStorageAvailable = true;
 function loadProgression() {
   let saved = null;
@@ -1037,8 +1114,8 @@ const TUTORIAL_STEPS = [
   ['ターンを終了しよう', '右上の「ターン終了 ▶」をクリック。敵もカードを配置し、ポーンを自陣側（左）へ押し戻します。'],
   ['次のカードを選ぼう', '下の手札から「戦車」を選んでください。このカードは基本ダメージ2です。'],
   ['上書きできないことを確かめよう', '光っている敵のカード（左上のマス）をクリック。敵味方を問わず、配置済みのマスにはカードを置けません。'],
-  ['逆位置を試そう', '「↓ 逆位置」ボタンを押します。逆位置は基本ダメージの向きが逆転し、ターン終了時に固有の効果が発動します。'],
-  ['正位置に戻そう', '今回は敵へ攻撃するため、「↑ 正位置」ボタンを押して戻しましょう。'],
+  ['逆位置を試そう', '「↓ 逆位置」ボタンを押します。逆位置でも基本ダメージは相手方向へ進み、ターン終了時に逆位置固有効果が発動します。'],
+  ['正位置に戻そう', '今回は正位置で配置するため、「↑ 正位置」ボタンを押して戻しましょう。'],
   ['アイテムを使おう', '左側のインベントリにある「儀礼ナイフ」の「使う」を押すと、次に配置するカードのダメージが+1されます。'],
   ['戦車で大きく攻撃しよう', '光る空きマスに「戦車」を配置。基本ダメージ2＋ナイフの1で合計3進みます。'],
   ['最後のカードを選ぼう', '手札から「女教皇」を選びます。敵の王冠はあと1つ。ポーンを右端へ到達させましょう。'],
@@ -1109,7 +1186,7 @@ function startTutorial() {
   document.getElementById('enemyDesc').textContent = '1ターン目に1枚だけ配置する練習相手。相手の王冠を0にしよう！';
   document.getElementById('enemyNo').textContent = '1';
   document.getElementById('enemyTotal').textContent = '1';
-  updateCrowns(); updateDeckList(); renderHandUI(); renderInventory();
+  updateCrowns(false); updateDeckList(); renderHandUI(); renderInventory();
   updateTutorialGuide(); resizeCanvas(); draw();
   log('📖 チュートリアル開始！指示に沿って戦闘を体験しよう。');
 }
@@ -1246,6 +1323,7 @@ function startVersus() {
   // 各自22枚。初期手札は愚者+ランダム3枚。
   gameState.pvp = {active:0, players:[pvpDealInitial(),pvpDealInitial()]};
   gameState.turn = 1; gameState.playerCrowns=3; gameState.enemyCrowns=3;
+  updateCrowns(false);
   gameState.enemyMaxCrowns=3; gameState.pawnPos=0;
   gameState.grid=Array(25).fill(null); gameState.sunUsed={p:false,e:false};
   gameState.locked=false;gameState.inventory=[];gameState.knifeBonus=0;
@@ -1999,10 +2077,12 @@ function makeCtx(cell, idx) {
     setSelfUpright() {
       if (grid()[idx] === cell && cell.rev) { cell.rev = false; log(`[${ARCANA_DATA[cell.cardId].jp}] が正位置に戻った。`); }
     },
-    // 通常のダメージは逆位置なら反対方向
-    push(n) {
+    // 基本ダメージはカードの向きに関係なく相手方向へ進む。
+    // 固有能力による追加ダメージは従来どおり逆位置で方向が反転する。
+    pushBase(n) { this.push(n, true); },
+    push(n, ignoreReverse = false) {
       if (!n) return;
-      const amt = n * (mine ? 1 : -1) * (cell.rev ? -1 : 1);
+      const amt = n * (mine ? 1 : -1) * (cell.rev && !ignoreReverse ? -1 : 1);
       gameState.pawnPos += amt;
       log(`　ダメージ ${Math.abs(amt)}（ポーン${gameState.pvp ? (amt>0 ? '▶P2側へ' : '◀P1側へ') : (amt > 0 ? '▶敵陣へ' : '◀自陣へ')}）`);
     },
@@ -2070,10 +2150,13 @@ function makeCtx(cell, idx) {
 }
 
 /* ===== カードの配置・ターン終了処理 ===== */
+// 共通の配置可能判定：両陣営とも空きマス以外へ配置できない。
+// 敵AIの配置候補・着地時・実際の配置をすべてこの判定で統一する。
+function canPlaceCardAt(idx) {
+  return Number.isInteger(idx) && idx >= 0 && idx < 25 && gameState.grid[idx] === null;
+}
 function placeCard(idx, cardId, isPlayer, rev = false) {
-  const old = gameState.grid[idx];
-  // 所有者にかかわらず、埋まっているマスには置けない。
-  if (old) {
+  if (!canPlaceCardAt(idx)) {
     log('配置済みのカードには重ねられない。空きマスを選ぼう。');
     return false;
   }
@@ -2092,7 +2175,7 @@ function placeCard(idx, cardId, isPlayer, rev = false) {
     log(`🗡 儀礼ナイフの力が乗った！ ダメージ+${bonus}`);
     updateStatus();
   }
-  c.push(basePush(cardId) + bonus);
+  c.pushBase(basePush(cardId) + bonus);
   const eff = EFFECTS[cardId];
   if (eff.onPlay) eff.onPlay(c);
 
@@ -2194,7 +2277,7 @@ function startBattle(first) {
   document.getElementById('enemyNo').textContent = gameState.enemyType + 1;
   document.getElementById('enemyTotal').textContent = enemies.length;
   document.getElementById('turnNum').textContent = 1;
-  updateCrowns();
+  updateCrowns(false);
   updatePlays();
   renderInventory();
   updateStatus();
@@ -2242,9 +2325,129 @@ function updateGold() {
   document.getElementById('shopGold').textContent = gameState.gold;
 }
 
-function updateCrowns() {
-  document.getElementById('enemyCrowns').textContent = "👑".repeat(Math.max(0, gameState.enemyCrowns));
-  document.getElementById('playerCrowns').textContent = "👑".repeat(Math.max(0, gameState.playerCrowns));
+// Render a crown's final break in the place where the crown vanished.
+// The effect lives in document.body so it remains visible above the result modal.
+/* ===== 王冠破壊効果音：金属の衝撃音・亀裂・破片の余韻を合成 =====
+   Web Audioだけで生成するため音声ファイルは不要。
+   タイトル等のクリックで音声を有効化し、オンラインの相手ターンでも再生可能にする。 */
+let crownAudioContext = null;
+let crownSoundLastTime = -10;
+function unlockCrownAudio() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!crownAudioContext) crownAudioContext = new AudioContextClass();
+    if (crownAudioContext.state === 'suspended') {
+      const result = crownAudioContext.resume();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    }
+    return crownAudioContext;
+  } catch (_) { return null; }
+}
+// ブラウザの自動再生制限に備え、ユーザーがゲームを操作した時点で有効化する。
+document.addEventListener('pointerdown', unlockCrownAudio, {passive:true});
+document.addEventListener('keydown', unlockCrownAudio);
+function playCrownBreakSound() {
+  if (document.hidden) return;
+  try {
+    const ac = unlockCrownAudio();
+    if (!ac || ac.state !== 'running') return;
+    const t = ac.currentTime + 0.008;
+    // 同じフレーム内で複数の王冠が割れても極端に大きな音にならないようにする。
+    if (t - crownSoundLastTime < 0.12) return;
+    crownSoundLastTime = t;
+    const master = ac.createGain();
+    master.gain.value = 0.24; // 戦闘BGMを妨げにくい音量
+    master.connect(ac.destination);
+    const tone = (type, freq, endFreq, at, length, loudness) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t + at);
+      o.frequency.exponentialRampToValueAtTime(endFreq, t + at + length);
+      g.gain.setValueAtTime(Math.max(0.0001,loudness), t + at);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + at + length);
+      o.connect(g); g.connect(master);
+      o.start(t + at); o.stop(t + at + length + 0.012);
+    };
+    // 低い衝撃と短い金属的な響き。
+    tone('triangle', 145, 65, 0, 0.14, 0.49);
+    tone('sine', 940, 660, 0.013, 0.31, 0.27);
+    tone('sine', 1660, 1220, 0.020, 0.39, 0.20);
+    tone('sine', 2780, 2310, 0.022, 0.29, 0.12);
+    // 破片の跳ねる音。わずかにタイミングと音程をずらして奥行きを作る。
+    tone('sine', 2550, 1710, 0.125, 0.17, 0.20);
+    tone('sine', 3430, 2180, 0.215, 0.13, 0.13);
+    tone('sine', 1920, 1420, 0.315, 0.16, 0.09);
+    // 砕ける瞬間のパリッというノイズ成分。
+    const length = Math.floor(ac.sampleRate * 0.23);
+    const buffer = ac.createBuffer(1, length, ac.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) samples[i] = Math.random() * 2 - 1;
+    const noise = ac.createBufferSource(), filter = ac.createBiquadFilter(), gain = ac.createGain();
+    noise.buffer = buffer;
+    filter.type = 'bandpass'; filter.frequency.value = 2600; filter.Q.value = 0.7;
+    gain.gain.setValueAtTime(0.34, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    noise.connect(filter); filter.connect(gain); gain.connect(master);
+    noise.start(t); noise.stop(t + 0.23);
+  } catch (_) { /* 音声非対応環境でもゲーム進行・王冠演出は維持 */ }
+}
+
+function animateCrownBreak(rect) {
+  if (!rect || !rect.width || !rect.height) return;
+  const fx = document.createElement('div');
+  fx.className = 'crown-break-fx';
+  fx.setAttribute('aria-hidden', 'true');
+  fx.style.left = `${rect.left + rect.width / 2}px`;
+  fx.style.top = `${rect.top + rect.height / 2}px`;
+  fx.innerHTML = `<span class="crown-break-flash"></span>
+    <span class="crown-break-piece left">👑</span>
+    <span class="crown-break-piece right">👑</span>
+    <span class="crown-break-crack">ϟ</span>`;
+  // Deterministic particles to keep the look consistent in online matches.
+  for (let i = 0; i < 13; i++) {
+    const a = (i * Math.PI * 2 / 13) - Math.PI / 2;
+    const d = 30 + (i % 4) * 10;
+    const shard = document.createElement('i');
+    shard.className = 'crown-break-shard';
+    shard.style.setProperty('--w', `${4 + i % 3 * 2}px`);
+    shard.style.setProperty('--h', `${7 + i % 4 * 2}px`);
+    shard.style.setProperty('--dx', `${Math.cos(a) * d}px`);
+    shard.style.setProperty('--dy', `${Math.sin(a) * d + 15}px`);
+    shard.style.setProperty('--rotate', `${70 + i * 53}deg`);
+    shard.style.setProperty('--delay', `${(i % 3) * 26}ms`);
+    fx.appendChild(shard);
+  }
+  document.body.appendChild(fx);
+  fx.addEventListener('animationend', e => {
+    if (e.target === fx) fx.remove();
+  });
+}
+
+// Call whenever crowns are updated, including remote online snapshots and Arcana Burst.
+// Opening a new battle uses animateLoss=false to prevent a false break during initialization.
+function updateCrowns(animateLoss = true) {
+  for (const [id, amount] of [['enemyCrowns', gameState.enemyCrowns], ['playerCrowns', gameState.playerCrowns]]) {
+    const target = document.getElementById(id);
+    const next = Math.max(0, Math.floor(amount));
+    const previous = target.dataset.crownCount === undefined ? null : Number(target.dataset.crownCount);
+    if (animateLoss && previous !== null && next < previous) {
+      const icons = [...target.querySelectorAll('.crown-token')];
+      let shattered = false;
+      for (let i = previous - 1; i >= next; i--) {
+        const icon = icons[i];
+        if (icon) {
+          animateCrownBreak(icon.getBoundingClientRect());
+          shattered = true;
+        }
+      }
+      // 割れ目が現れる約0.3秒後に効果音を同期。最終王冠・アルカナバースト・オンラインも共通。
+      if (shattered) setTimeout(playCrownBreakSound, 300);
+    }
+    target.innerHTML = Array.from({length: next}, () => '<span class="crown-token">👑</span>').join('');
+    target.dataset.crownCount = String(next);
+    target.setAttribute('aria-label', `${next} crowns`);
+  }
 }
 function updatePlays() {
   document.getElementById('playsLeft').textContent = gameState.playsLeft;
@@ -2375,7 +2578,7 @@ function cardInfoHTML(cardId, rev, isPlayer) {
     <div style="font-weight:bold;color:#fff;">#${cardId} ${a.jp}
       <span style="color:#888;font-weight:normal;font-size:0.65rem;">${a.name}</span>
       ${rev ? '<span class="trig">【逆位置】</span>' : ''}</div>
-    <div style="margin-top:4px;">ダメージ: ${basePush(cardId)}${rev ? '（逆向き）' : ''}</div>
+    <div style="margin-top:4px;">基本ダメージ: ${basePush(cardId)}</div>
     ${e.info.map(([t, x]) => `<div style="margin-top:4px;"><span class="trig">【${t}】</span>${x}</div>`).join('')}
     <div style="margin-top:7px;border-top:1px solid #563568;padding-top:6px;color:${rev ? '#e9c4ff' : '#b6a1c5'};">
       <b>【逆位置：${REVERSE_EFFECTS[cardId].name}】</b><br>${REVERSE_EFFECTS[cardId].info}
@@ -2914,7 +3117,7 @@ function checkVictoryCondition() {
 */
 function scoreEnemyPlacement(cardId, idx) {
   const grid = gameState.grid;
-  if (grid[idx]) return -Infinity;
+  if (!canPlaceCardAt(idx)) return -Infinity;
   const neighbor = neighborsOf(idx);
   const ownAdj = neighbor.filter(i => grid[i] && !grid[i].isPlayer);
   const foeAdj = neighbor.filter(i => grid[i] && grid[i].isPlayer);
@@ -2989,8 +3192,9 @@ function scoreEnemyPlacement(cardId, idx) {
 function chooseEnemyPlacement(cardId) {
   let best = -Infinity;
   let chosen = null;
-  gameState.grid.forEach((cell,idx)=>{
-    if(cell) return;
+  gameState.grid.forEach((_cell,idx)=>{
+    // 能力評価の高得点よりも、配置先が空きマスであることを優先する。
+    if (!canPlaceCardAt(idx)) return;
     const score = scoreEnemyPlacement(cardId,idx);
     if(score>best){best=score;chosen=idx;}
   });
@@ -2999,26 +3203,29 @@ function chooseEnemyPlacement(cardId) {
 
 /* ===== 敵ターン ===== */
 async function enemyPlaceCard(plannedId, previewIndex) {
-  let empty = [];
-  gameState.grid.forEach((cell, idx) => { if (!cell) empty.push(idx); });
-  if (empty.length === 0) {
-    // 万一、敵の行動開始時点で満杯なら先に盤面をリセットする。
+  if (gameState.grid.every(cell => cell !== null)) {
+    // 満杯時はアルカナバーストでリセットしてから配置先を探す。
     resetFullBoardIfNeeded();
     if (gameState.locked) return null;
-    gameState.grid.forEach((cell, idx) => { if (!cell) empty.push(idx); });
-  }
-  if (empty.length === 0) {
-    log('敵は空きマスが無いため、カードの配置を見送った。');
-    return null;
   }
   const enemyCardId = plannedId !== undefined ? plannedId : pick(enemies[gameState.enemyType].aiCards);
-  const targetIdx = chooseEnemyPlacement(enemyCardId);
-  if (targetIdx === null) return null;
   const preview = document.querySelectorAll('#enemyNext .next-card img')[previewIndex];
-  await animateCardPlacement(enemyCardId, targetIdx, false, preview);
-  if (!placeCard(targetIdx, enemyCardId, false, false)) return null;
-  draw();
-  return targetIdx;
+  // 位置選択からアニメーション着地までの間に盤面が変化しても上書きしない。
+  // 着地先が埋まっていた場合は、残っている空きマスから選び直す。
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (gameState.locked) return null;
+    const targetIdx = chooseEnemyPlacement(enemyCardId);
+    if (targetIdx === null) break;
+    if (!canPlaceCardAt(targetIdx)) continue;
+    await animateCardPlacement(enemyCardId, targetIdx, false, preview);
+    if (gameState.locked) return null;
+    if (!canPlaceCardAt(targetIdx)) continue;
+    if (!placeCard(targetIdx, enemyCardId, false, false)) continue;
+    draw();
+    return targetIdx;
+  }
+  log('敵は空きマスが無いため、カードの配置を見送った。');
+  return null;
 }
 
 async function enemyTurn() {
@@ -3648,7 +3855,7 @@ function chooseCharacter(id) {
   shopStock=null;
   document.getElementById('titleScreen').style.display='none';
   document.getElementById('logBox').innerHTML='';
-  updateGold();updateCrowns();renderInventory();updateDeckList();
+  updateGold();updateCrowns(false);renderInventory();updateDeckList();
   log(`${char.name}の冒険が始まる！`);
   if(char.draft) startDraft();
   else if(char.id==='merchant') startBattle(true);
@@ -3744,7 +3951,7 @@ function renderGalleryDetail(id) {
     <section class="gallery-section reverse">
       <h3>↓ 逆位置「${reverse.name}」</h3>
       <div>${reverse.info}</div>
-      <div style="margin-top:8px;color:#9caab9;font-size:0.72rem;">逆位置は配置時の基本ダメージが逆方向になります。配置時・隣接時の通常能力は逆位置でも発動します。</div>
+      <div style="margin-top:8px;color:#9caab9;font-size:0.72rem;">逆位置でも基本ダメージは相手方向へ進みます。固有能力の追加ダメージは従来どおり逆方向になり、逆位置効果はターン終了時に発動します。</div>
     </section>
   `;
   document.getElementById('galleryDetail').scrollTop = 0;
@@ -3771,7 +3978,7 @@ function openHelp() {
     <ul>
       <li>手札と正位置・逆位置を選び、空きマスに配置します。1ターン2枚まで。</li>
       <li>カードには配置時・隣接時・ターン終了時の効果があります。詳しくはカード詳細へ。</li>
-      <li>逆位置ではダメージ方向が反転し、持ち主のターン終了時に固有効果が発動します。</li>
+      <li>逆位置でも基本ダメージは相手方向へ進み、持ち主のターン終了時に逆位置固有効果が発動します。</li>
       <li>敵の次のカードは右側に表示。カードがあるマスには上書きできません。</li>
       <li>25マスが埋まると「アルカナバースト」。枚数の少ない側が王冠を1つ失い、盤面をリセットして4枚引き直します。</li>
     </ul>
@@ -3883,7 +4090,7 @@ document.addEventListener('keydown', e => {
     '🔒 クリア1回で解禁（':'🔒 Clear one run to unlock (',
     '1回クリアで解禁':'Unlock after 1 clear',
     '500Gで解禁':'Unlock for 500G',
-    '1000Gで解禁':'Unlock for 1000G',
+    '750Gで解禁':'Unlock for 750G',
     'を解禁しました！':' unlocked!',
     '解禁には':'Unlock cost: ',
     'ゴールドが足りません。':'Not enough gold. ',
@@ -3891,9 +4098,9 @@ document.addEventListener('keydown', e => {
     '持ち帰ったゴールド':'Gold brought back',
     '修道女が解禁されました！':'Nun unlocked!',
     'このブラウザでは進行状況を保存できません。保存設定をご確認ください。':'Progress cannot be saved in this browser. Please check your storage settings.',
-    '※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は1000Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。': 'Seeker is available at the start. Unlock Nun by clearing a run once; unlock Merchant for 500G and Avenger for 1000G. Progress is saved in this browser.',
+    '※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は750Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。': 'Seeker is available at the start. Unlock Nun by clearing a run once; unlock Merchant for 500G and Avenger for 750G. Progress is saved in this browser.',
     '各冒険は99Gで開始。クリアまたは敗北したら残りのゴールドを持ち帰り、タイトル画面の所持金に加算します。':'Each run starts with 99G. After a clear or defeat, all remaining gold is added to your saved gold.',
-    '最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は1000Gを持ち帰りゴールドから支払って解禁します。':'Seeker starts unlocked. Clear a run once to unlock Nun, or spend saved gold to unlock Merchant (500G) and Avenger (1000G).'
+    '最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は750Gを持ち帰りゴールドから支払って解禁します。':'Seeker starts unlocked. Clear a run once to unlock Nun, or spend saved gold to unlock Merchant (500G) and Avenger (750G).'
   });
   Object.assign(STRINGS, {
     '山札と墓地':'Draw Pile and Discard Pile',
@@ -3934,6 +4141,15 @@ document.addEventListener('keydown', e => {
     '待機中': 'Waiting',
     '残り配置回数': 'Remaining Placements',
     '相手のターン中は配置できません': 'Cannot place during the opponent’s turn'
+  });
+  // Rule update: reverse orientation never reverses the base placement damage.
+  Object.assign(STRINGS, {
+    '基本ダメージは正位置・逆位置とも相手方向へ進みます。': 'Base damage always moves toward the opponent, regardless of orientation.',
+    '逆位置でも基本ダメージは相手方向へ進み、ターン終了時に逆位置固有効果が発動します。': 'Even when reversed, base damage moves toward the opponent. The reversed effect activates at the end of its owner’s turn.',
+    '今回は正位置で配置するため、「↑ 正位置」ボタンを押して戻しましょう。': 'For this practice, press “↑ Upright” to place the card upright.',
+    '逆位置でも基本ダメージは相手方向へ進みます。固有能力の追加ダメージは従来どおり逆方向になり、逆位置効果はターン終了時に発動します。': 'Base damage always pushes toward the opponent. Additional damage from card abilities still reverses direction, and the reversed effect activates at the end of the turn.',
+    '逆位置でも基本ダメージは相手方向へ進み、持ち主のターン終了時に逆位置固有効果が発動します。': 'Base damage still moves toward the opponent when reversed. Its reversed effect activates at the end of its owner’s turn.',
+    '基本ダメージ:': 'Base Damage:',
   });
   const SORTED = Object.keys(STRINGS).sort((a,b)=>b.length-a.length);
   const exact = Object.create(null);
