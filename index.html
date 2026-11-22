@@ -116,6 +116,44 @@
   .orientation-btn.active.reverse { border-color:var(--purple); background:#482454; box-shadow:0 0 7px rgba(155,89,182,0.55); }
   .hand-cards { display:flex; align-items:center; justify-content:center; gap:14px; min-width:0; overflow-x:auto; padding:10px 4px 6px; }
   .hand-cards .hand-card { flex-shrink:0; }
+
+  /* 手札右端：残り配置回数（カード型の印で一目で分かる） */
+  .hand-cards { flex: 1 1 auto; }
+  .placement-counter {
+    flex: 0 0 auto; width: 110px; min-height: 100px;
+    padding: 9px 8px 8px 13px; margin-left: 2px;
+    border-left: 1px solid rgba(197,160,89,.65);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 6px; text-align: center;
+  }
+  .placement-counter-label { color: var(--gold); font-size: .72rem; font-weight: bold; white-space: nowrap; }
+  .placement-counter-value { display:flex; align-items:baseline; gap:2px; line-height:1; }
+  .placement-counter-value strong { font-size: 1.65rem; color:#ffe5a0; font-variant-numeric:tabular-nums; }
+  .placement-counter-value small { font-size:.72rem; color:#8994a2; }
+  .placement-counter-icons { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:5px; min-height:30px; }
+  .placement-slot {
+    display: inline-flex; align-items:center; justify-content:center;
+    width: 21px; height: 29px; border:2px solid #6d7280; border-radius:4px;
+    background: linear-gradient(145deg,#252b33,#111419); color:#616e7b;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.04);
+    font-size: .80rem; font-weight:bold;
+  }
+  .placement-slot.available {
+    color:#ffdf8c; border-color:#f3c66e;
+    background:linear-gradient(145deg,#755522,#33270f);
+    box-shadow: 0 0 9px rgba(243,156,18,.34), inset 0 0 0 2px rgba(255,220,143,.13);
+  }
+  .placement-counter.waiting .placement-counter-label { color:#9da7b4; }
+  .placement-counter.waiting .placement-counter-value strong { color:#a4adba; }
+  .placement-counter.no-plays .placement-counter-value strong { color:#bd9b78; }
+  @media(max-width:780px) {
+    .placement-counter { width:75px; padding:6px 3px 6px 7px; min-height:80px; gap:4px; }
+    .placement-counter-label {font-size:.62rem;}
+    .placement-counter-value strong {font-size:1.4rem;}
+    .placement-slot {width:16px;height:23px;font-size:.65rem;}
+    .placement-counter-icons {gap:3px;min-height:23px;}
+  }
+
   @media(max-width:780px) { .hand-bar {gap:6px; padding:5px;} .hand-cards {gap:7px; justify-content:flex-start;}
     .orientation-picker {padding-right:5px;} .orientation-btn {min-width:72px; padding:5px;} }
   .hand-badge, .hand-lv {
@@ -485,6 +523,77 @@
   #avengerAbilityBtn:disabled { opacity:.55; cursor:default; }
   @media(max-width:890px) { .character-grid {grid-template-columns:repeat(2,minmax(0,1fr));} .character-deck{min-height:0;} }
   @media(max-width:490px) { .character-grid {grid-template-columns:1fr;} .character-art {height:102px;} .character-art img{height:80px;width:45px;} .character-modal .modal-content{padding:16px;} }
+
+  /* ===== 山札と墓地 ===== */
+  .pile-buttons {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:2px 0 0;}
+  .pile-button {min-width:0;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 8px;
+    border:1px solid #846b43;border-radius:7px;background:linear-gradient(150deg,#292c38,#121720);}
+  .pile-button:hover,.pile-button:focus-visible {border-color:#efcd88;background:#394151;}
+  .pile-symbol {font-size:1.45rem;flex-shrink:0;line-height:1.1;}
+  .pile-labels {min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .pile-name {font-weight:bold;font-size:.76rem;color:#e5d2ab;}
+  .pile-amount {font-size:.74rem;color:#dce3ed;white-space:nowrap;}
+  .pile-instruction {font-size:.65rem;color:#9aa7b6;line-height:1.4;margin:0 0 4px;}
+  .pile-modal .modal-content {width:min(92vw,890px);max-width:890px;text-align:left;}
+  .pile-modal-header {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .pile-modal-header h2 {color:#f5d18b;font-size:1.2rem;margin:0;}
+  .pile-modal-copy {font-size:.72rem;color:#a7b7c7;margin:0 0 13px;line-height:1.45;}
+  .pile-modal-layout {display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,265px);gap:14px;align-items:start;}
+  .pile-card-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:9px;
+    max-height:min(57vh,470px);overflow-y:auto;padding:4px;align-content:start;}
+  .pile-card-tile {display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 5px;
+    background:#151821;border:1px solid #73613f;border-radius:7px;font-size:.7rem;line-height:1.25;min-width:0;}
+  .pile-card-tile:hover,.pile-card-tile:focus-visible,.pile-card-tile.active {border-color:#f0c779;background:#303142;}
+  .pile-card-tile img {width:min(100%,82px);height:auto;aspect-ratio:168 / 300;object-fit:fill;border-radius:3px;}
+  .pile-card-tile span {text-align:center;overflow-wrap:anywhere;color:#ebdfc8;}
+  .pile-detail {background:#0f121b;border:1px solid #5d4e38;border-radius:6px;padding:12px;
+    overflow-y:auto;max-height:min(57vh,470px);font-size:.74rem;line-height:1.55;color:#bdcbdc;}
+  .pile-empty {grid-column:1 / -1;color:#aab5c3;text-align:center;padding:24px 8px;font-size:.82rem;}
+  @media(max-width:620px) {.pile-modal-layout{grid-template-columns:1fr}.pile-card-grid{max-height:38vh}
+    .pile-detail{max-height:32vh}.pile-modal .modal-content{padding:14px}.pile-modal-header h2{font-size:1rem}}
+
+  /* 正位置/逆位置・手札・残り配置回数を中央にひとまとめにする。
+     手札が少なくても操作部品が画面の両端に離れない。 */
+  #handBar { justify-content: center; padding-inline: 12px; }
+  .hand-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
+    margin-inline: auto;
+  }
+  .hand-controls-row .orientation-picker {
+    margin: 0;
+    padding: 0 10px 0 0;
+    border-right: 1px solid rgba(197,160,89,.45);
+  }
+  .hand-controls-row .hand-cards {
+    flex: 0 1 auto;
+    width: max-content;
+    min-width: 0;
+    max-width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .hand-controls-row .placement-counter {
+    margin: 0;
+    padding-left: 10px;
+    width: 105px;
+    border-left: 1px solid rgba(197,160,89,.45);
+  }
+  @media (max-width: 780px) {
+    #handBar { padding-inline: 5px; }
+    .hand-controls-row { gap: 5px; }
+    .hand-controls-row .orientation-picker { padding-right: 5px; }
+    .hand-controls-row .hand-cards { gap: 7px; }
+    .hand-controls-row .placement-counter { width: 75px; padding-left: 5px; }
+  }
+
 </style>
 </head>
 <body>
@@ -574,7 +683,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <div><span id="enemyCrownLabel">敵王冠</span>: <span id="enemyCrowns" class="crowns">👑👑👑</span></div>
     <div><span id="playerCrownLabel">自王冠</span>: <span id="playerCrowns" class="crowns">👑👑👑</span></div>
     <div><span id="turnLabel">ターン</span>: <span id="turnNum" style="color:var(--gold);">1</span></div>
-    <div>配置: <span id="playsLeft" style="color:var(--gold);">2</span></div>
+    <div style="visibility:hidden;" aria-hidden="true">配置: <span id="playsLeft" style="color:var(--gold);">2</span></div>
     <div class="gold-stat" id="goldStat" title="所持ゴールド"><img class="gold-coin" data-gold-icon alt="" aria-hidden="true"> <span id="goldAmount">99</span> G</div>
     <div id="statusBadges" style="font-size:0.8rem;"></div>
   </div>
@@ -603,6 +712,15 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <div id="logBox" class="log-box">運命の歯車が回り始めた...</div>
     <h3 id="deckHeading">所持デッキ (<span id="deckCount">6</span>)</h3>
     <div id="deckList" style="font-size:0.75rem; color:#b2bec3; max-height:200px; overflow-y:auto;"></div>
+    <div class="pile-buttons" role="group" aria-label="山札と墓地">
+      <button class="pile-button" type="button" id="drawPileButton" onclick="openPileViewer('deck')" aria-label="山札のカード一覧を見る">
+        <span class="pile-symbol" aria-hidden="true">🂠</span><span class="pile-labels"><span class="pile-name">山札</span><span class="pile-amount"><span id="drawPileCount">0</span> 枚</span></span>
+      </button>
+      <button class="pile-button" type="button" id="gravePileButton" onclick="openPileViewer('graveyard')" aria-label="墓地のカード一覧を見る">
+        <span class="pile-symbol" aria-hidden="true">✦</span><span class="pile-labels"><span class="pile-name">墓地</span><span class="pile-amount"><span id="gravePileCount">0</span> 枚</span></span>
+      </button>
+    </div>
+    <p class="pile-instruction">クリックすると中のカードを確認できます。</p>
     <h3 id="inventoryHeading">インベントリ (<span id="inventoryCount">0/3</span>)</h3>
     <div id="inventory" style="display:flex; flex-direction:column; gap:6px;"></div>
   </div>
@@ -636,12 +754,21 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
 </div>
 
 <div class="hand-bar" id="handBar">
+  <div class="hand-controls-row">
   <div class="orientation-picker" aria-label="カードを配置する向き">
     <div class="orientation-heading">配置する向き</div>
     <button id="uprightBtn" class="orientation-btn active" onclick="setPlacementOrientation(false)" aria-pressed="true">↑ 正位置</button>
     <button id="reverseBtn" class="orientation-btn reverse" onclick="setPlacementOrientation(true)" aria-pressed="false">↓ 逆位置</button>
   </div>
   <div id="handCards" class="hand-cards"></div>
+  <div id="placementCounter" class="placement-counter" role="status" aria-live="polite" aria-label="残り配置回数 2">
+    <span class="placement-counter-label" id="placementCounterLabel">残り配置</span>
+    <div class="placement-counter-value"><strong id="placementCounterNumber">2</strong><small id="placementCounterTotal">/ 2</small></div>
+    <div id="placementCounterIcons" class="placement-counter-icons" aria-hidden="true">
+      <span class="placement-slot available">✦</span><span class="placement-slot available">✦</span>
+    </div>
+  </div>
+  </div>
 </div>
 
 <div id="rewardModal" class="modal">
@@ -649,6 +776,19 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <h2 id="rewardTitle" style="color:var(--gold); margin-top:0;">勝利！ 報酬アルカナを選択</h2>
     <p id="rewardText" style="font-size:0.85rem; color:#aaa;">1枚を選んでください。重複カードは15Gに変換されます。</p>
     <div class="reward-grid" id="rewardGrid"></div>
+  </div>
+</div>
+
+<!-- 残り山札と墓地の内容（一覧閲覧のみ、配置等は不可） -->
+<div id="pileModal" class="modal pile-modal" role="dialog" aria-modal="true" aria-labelledby="pileModalTitle">
+  <div class="modal-content">
+    <div class="pile-modal-header"><h2 id="pileModalTitle"><span id="pileModalType">山札</span> <span id="pileModalCount">（0枚）</span></h2>
+      <button type="button" onclick="closePileViewer()">閉じる</button></div>
+    <p class="pile-modal-copy">カードを選ぶと能力を確認できます。山札の並び順はドロー順を表していません。</p>
+    <div class="pile-modal-layout">
+      <div id="pileCardGrid" class="pile-card-grid" aria-label="カード一覧"></div>
+      <div id="pileCardDetail" class="pile-detail" aria-live="polite">カードを選ぶと詳細が表示されます。</div>
+    </div>
   </div>
 </div>
 
@@ -1081,7 +1221,7 @@ function pvpRefreshUI() {
   document.getElementById('enemyCrownLabel').textContent = 'P2 王冠';
   document.getElementById('deckHeading').innerHTML = `P${cur} のデッキ (<span id="deckCount">22</span>)`;
   document.getElementById('enemyName').textContent = `プレイヤー${other}（${other===1?'青':'赤'}）`;
-  document.getElementById('enemyDesc').textContent = `手札 ${opponent.hand.length}枚 / 山札 ${opponentDeckCount}枚。相手の手札は見えません。`;
+  document.getElementById('enemyDesc').textContent = `手札 ${opponent.hand.length}枚 / 山札 ${opponentDeckCount}枚 / 墓地 ${opponent.graveyard.length}枚。相手の手札は見えません。`;
   const viewing = !onlineMyTurn();
   document.getElementById('statusBadges').innerHTML = `<span class="pvp-turn-banner" style="background:${cur===1?'#305b88':'#8e3434'}">P${cur} の番</span>`
     + (viewing ? ' <span style="color:#e6c483">👁 観戦中</span>' : '');
@@ -2108,14 +2248,123 @@ function updateCrowns() {
 }
 function updatePlays() {
   document.getElementById('playsLeft').textContent = gameState.playsLeft;
+  renderPlacementCounter();
   updateAvengerButton();
+}
+
+// 右端のカード型マーカー。基本2枚、魔術師・復讐者などの増加分にも対応。
+// 相手のターン中は手札を閲覧できるが配置不可のため、0／待機中と表示する。
+function renderPlacementCounter() {
+  const wrapper = document.getElementById('placementCounter');
+  if (!wrapper) return;
+  const waiting = !!(gameState.pvp && onlineGame.role && !onlineMyTurn());
+  const remaining = waiting ? 0 : Math.max(0, Math.floor(gameState.playsLeft || 0));
+  const count = Math.max(PLAYS_PER_TURN, remaining);
+  const label = waiting ? '待機中' : '残り配置';
+  document.getElementById('placementCounterLabel').textContent = label;
+  document.getElementById('placementCounterNumber').textContent = remaining;
+  document.getElementById('placementCounterTotal').textContent = '/ ' + count;
+  document.getElementById('placementCounterIcons').innerHTML =
+    Array.from({length: Math.min(8,count)}, (_,i) =>
+      `<span class="placement-slot${i<remaining?' available':''}">✦</span>`).join('');
+  wrapper.classList.toggle('waiting', waiting);
+  wrapper.classList.toggle('no-plays', remaining === 0);
+  wrapper.setAttribute('aria-label',waiting ? '相手のターン中は配置できません' : `残り配置回数 ${remaining}`);
 }
 
 function updateDeckList() {
   document.getElementById('deckCount').textContent = gameState.collection.length;
   const list = document.getElementById('deckList');
   list.innerHTML = gameState.collection.map(id => `<div>・${ARCANA_DATA[id].jp}</div>`).join('');
+  updatePileUI();
 }
+
+/* ===== 山札・墓地の閲覧（対戦ではこの端末の所持カードのみ） ===== */
+let pileViewerKind = null;
+let pileViewerSelectedId = null;
+let pileViewerSignature = '';
+function visibleOwnPiles() {
+  if (!gameState.pvp || !onlineGame.role) return {deck:gameState.deck,graveyard:gameState.graveyard};
+  const myIndex = onlineGame.role === 'guest' ? 1 : 0;
+  if (gameState.pvp.active === myIndex) return {deck:gameState.deck,graveyard:gameState.graveyard};
+  const mine = gameState.pvp.players[myIndex];
+  return {deck:mine.deck || [],graveyard:mine.graveyard || []};
+}
+function updatePileUI() {
+  const deckCount = document.getElementById('drawPileCount');
+  if (!deckCount) return;
+  const mine = visibleOwnPiles();
+  const counts = [[deckCount,mine.deck.length],[document.getElementById('gravePileCount'),mine.graveyard.length]];
+  for(const [node,value] of counts) if (node.textContent !== String(value)) node.textContent=String(value);
+  if (pileViewerKind) {
+    const ids = mine[pileViewerKind];
+    const signature = pileViewerKind+'|'+ids.join(',');
+    if (signature !== pileViewerSignature) renderPileViewer(ids,signature);
+  }
+}
+function openPileViewer(kind) {
+  if (kind !== 'deck' && kind !== 'graveyard') return;
+  pileViewerKind=kind;
+  pileViewerSelectedId=null;
+  pileViewerSignature='';
+  document.getElementById('pileModal').style.display='flex';
+  updatePileUI();
+}
+function closePileViewer() {
+  document.getElementById('pileModal').style.display='none';
+  pileViewerKind=null;
+  pileViewerSelectedId=null;
+  pileViewerSignature='';
+}
+function selectPileCard(id) {
+  pileViewerSelectedId=id;
+  document.querySelectorAll('#pileCardGrid .pile-card-tile').forEach(tile => {
+    tile.classList.toggle('active',Number(tile.dataset.cardId)===id);
+  });
+  document.getElementById('pileCardDetail').innerHTML = cardInfoHTML(id,false,true);
+}
+function renderPileViewer(source,signature) {
+  if (!pileViewerKind) return;
+  pileViewerSignature=signature;
+  // This is a read-only display; never modify the game deck or its draw order.
+  const ids = [...source].sort((a,b)=>a-b);
+  document.getElementById('pileModalType').textContent=pileViewerKind==='deck'?'山札':'墓地';
+  document.getElementById('pileModalCount').textContent=`（${ids.length}枚）`;
+  const grid=document.getElementById('pileCardGrid');
+  grid.replaceChildren();
+  if(!ids.length) {
+    const message=document.createElement('div');
+    message.className='pile-empty';
+    message.textContent='カードはありません。';
+    grid.appendChild(message);
+    pileViewerSelectedId=null;
+    document.getElementById('pileCardDetail').textContent='カードがありません。';
+    return;
+  }
+  for(const id of ids) {
+    const card=ARCANA_DATA[id];
+    if (!card) continue;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='pile-card-tile';
+    btn.dataset.cardId=String(id);
+    btn.title=`#${id} ${card.jp}`;
+    const img=document.createElement('img');
+    img.src=CARD_SRC[id]; img.alt=''; img.loading='lazy';
+    const label=document.createElement('span');
+    label.textContent=`#${id} ${card.jp}`;
+    btn.append(img,label);
+    btn.onclick=()=>selectPileCard(id);
+    grid.appendChild(btn);
+  }
+  selectPileCard(ids.includes(pileViewerSelectedId)?pileViewerSelectedId:ids[0]);
+}
+document.getElementById('pileModal').addEventListener('click',ev=>{
+  if(ev.target===ev.currentTarget) closePileViewer();
+});
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape' && pileViewerKind) closePileViewer();
+});
 
 /* ===== カード詳細表示 ===== */
 function cardInfoHTML(cardId, rev, isPlayer) {
@@ -2338,10 +2587,12 @@ function renderHandUI() {
   });
   refreshDetail();
   if(!spectating) tutorialHighlightCards();
+  updatePileUI();
 }
 
 /* ===== 描画 ===== */
 function draw() {
+  updatePileUI();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const cx = canvas.width / 2;
   drawTrack(cx, 50);
@@ -2353,7 +2604,8 @@ function draw() {
     const x = startX + c * cw;
     const y = startY + r * ch;
 
-    ctx.fillStyle = (r < 2) ? "rgba(100, 30, 30, 0.2)" : (r > 2) ? "rgba(30, 60, 100, 0.2)" : "rgba(30,30,30,0.5)";
+    // 陣営による色分けを廃止し、25マスすべてを中央と同じ黒色に統一する。
+    ctx.fillStyle = "rgba(30,30,30,0.5)";
     ctx.strokeStyle = "#c5a059";
     ctx.lineWidth = 1.5;
     ctx.fillRect(x + 2, y + 2, cw - 4, ch - 4);
@@ -2376,22 +2628,40 @@ function draw() {
 }
 
 function drawTrack(cx, y) {
-  const width = 360;
+  // 小さな画面でもトラックがキャンバスからはみ出さないようにする。
+  const width = Math.min(360, Math.max(120, canvas.width - 32));
   const startX = cx - width / 2;
+  const step = width / 8;
 
+  ctx.save();
   ctx.fillStyle = "#111";
   ctx.fillRect(startX, y - 12, width, 24);
   ctx.strokeStyle = "#c5a059";
   ctx.lineWidth = 2;
   ctx.strokeRect(startX, y - 12, width, 24);
 
-  ctx.fillStyle = "#666";
-  ctx.fillRect(cx - 2, y - 12, 4, 24);
+  // -4 ～ +4 の9地点に目盛りを付ける（中央の0と端点は強調）。
+  for (let mark = -4; mark <= 4; mark++) {
+    const tickX = cx + mark * step;
+    const important = (mark === 0 || Math.abs(mark) === 4);
+    ctx.beginPath();
+    ctx.moveTo(tickX, y - (important ? 10 : 7));
+    ctx.lineTo(tickX, y + (important ? 10 : 7));
+    ctx.strokeStyle = important ? "#c5a059" : "rgba(197,160,89,0.53)";
+    ctx.lineWidth = important ? 1.8 : 1;
+    ctx.stroke();
 
-  const step = width / 8;
+    // 数値も付けて、どちらの陣営まで何マスかひと目で分かるようにする。
+    ctx.fillStyle = important ? "#e8c98c" : "#aab2bb";
+    ctx.font = (important ? "bold " : "") + "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(mark > 0 ? "+" + mark : String(mark), tickX, y + 23);
+  }
+
+  // 目盛りの上に現在地のポーンを描画する。
   const pos = Math.max(-4, Math.min(4, gameState.pawnPos));
   const pawnX = cx + pos * step;
-
   ctx.fillStyle = pos >= 0 ? "#e74c3c" : "#3498db";
   ctx.beginPath();
   ctx.arc(pawnX, y, 10, 0, Math.PI * 2);
@@ -2406,13 +2676,14 @@ function drawTrack(cx, y) {
   ctx.textBaseline = "middle";
   ctx.fillText("♟", pawnX, y);
 
-  // ポーンは右へ進むほど敵陣側
+  // ポーンは右へ進むほど敵陣側。
   ctx.fillStyle = "#c5a059";
   ctx.font = "11px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(gameState.pvp ? "👑 P1" : (window.arcanaLanguage === "en" ? "👑 You" : "👑 自陣"), startX, y - 20);
   ctx.textAlign = "right";
   ctx.fillText(gameState.pvp ? "P2 👑" : (window.arcanaLanguage === "en" ? "Enemy 👑" : "敵陣 👑"), startX + width, y - 20);
+  ctx.restore();
 }
 
 function rrPath(x, y, w, h, r) {
@@ -3481,45 +3752,36 @@ function renderGalleryDetail(id) {
 
 function openHelp() {
   document.getElementById('helpBody').innerHTML = `
-    <h4>初めて遊ぶ方へ</h4>
-    <p>タイトル画面の「チュートリアル」から、カード配置・向きの切替・ターン進行・アイテム使用・勝利までを実際に操作しながら練習できます。</p>
-    <h4>目的</h4>
+    <h4>はじめに</h4>
+    <p>初めてなら「チュートリアル」で基本操作を練習しましょう。</p>
+    <h4>勝敗</h4>
     <ul>
-      <li>盤面にタロットを置いて「ダメージ」を与え、ポーン（上部のトラック）を敵陣の端まで押し込むと、敵の王冠が1つ砕けます。</li>
-      <li>敵の王冠を全て砕けば勝利。自分の王冠が尽きるとゲームオーバーです。</li>
+      <li>カードのダメージで上部のポーンが動きます。右端で敵、左端で自分の王冠が1つ減ります。</li>
+      <li>敵の王冠を0にすれば勝利。自分の王冠が0になると敗北です。</li>
+      <li>6体の敵をすべて倒すと冒険クリアです。</li>
     </ul>
-    <h4>流れ</h4>
+    <h4>冒険の流れ</h4>
     <ul>
-      <li>ゲーム開始時に「探求者」「修道女」「商人」「復讐者」から主人公を選びます。</li>
-      <li>探求者は愚者＋4回のドラフト。他の3人は専用の固定5枚で開始します。</li>
-      <li>探求者・修道女・復讐者は初期アイテムを1つ選択。商人はアイテム3種類を各1つ持って開始します（所持上限3個）。</li>
-      <li>商人は敵撃破・重複カードの獲得ゴールドが+20％（端数切り捨て）になります。初期99Gと持ち帰る際の加算は増えません。</li>
-      <li>修道女は王冠4つ（回復上限も4）。復讐者は各戦闘1回、追加配置+1を使えます。</li>
-      <li>勝つたびに10～20Gを入手し、3枚から1枚を選びます。所持済みを選ぶと15Gが手に入ります（強化はありません）。</li>
-      <li>各冒険は99Gで開始。クリアまたは敗北したら残りのゴールドを持ち帰り、タイトル画面の所持金に加算します。</li>
-      <li>最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は1000Gを持ち帰りゴールドから支払って解禁します。</li>
-      <li>3体目（ビショップ）を倒し報酬を選ぶと、一度だけ「アルカナ商店」が現れます。</li>
-      <li>ショップにはアイテム3品、未所持カード5枚（各99～129G）、不要なカードの削除（初回75G、次から25Gずつ値上げ）があります。アイテム所持上限は3個です。</li>
-      <li>${enemies.length}体の駒を全て倒せばクリアです。</li>
+      <li>キャラを選択。探求者は愚者＋4枚ドラフト、ほかの3人は専用デッキで開始します。</li>
+      <li>初期所持金は99G。敵を倒すと10～20Gとカード報酬を獲得できます（重複は15G）。</li>
+      <li>3体目の撃破後にショップが登場。カード・アイテムの購入やカード削除ができます。</li>
+      <li>クリア・敗北時の残りゴールドは持ち帰り、キャラの解禁に使えます。</li>
     </ul>
-    <h4>戦闘のルール</h4>
+    <h4>戦闘の基本</h4>
     <ul>
-      <li>手札を選び、下部の「↑ 正位置 / ↓ 逆位置」で向きを決めてから盤面のマスをクリックします（1ターン2枚まで）。</li>
-       <li>カードのあるマスには敵味方とも上書き配置できません。</li>
-       <li>「アルカナバースト」：25マスがすべて埋まると、盤面の所属カード枚数が少ない側の王冠が1つ失われます（同数なら王冠は減りません）。その後盤面をリセットし、デッキ由来のカードと手札・墓地を山札に戻して4枚引き直します。</li>
-       <li>戦闘中はBGMがループ再生されます。画面右上のBGMボタンでON/OFF、音量スライダーで音量を変更できます。</li>
-      <li>敵が次のターンに出すカードは右側で確認できます。敵はカード能力と盤面の配置を考えて空きマスを選びます。</li>
-      <li>各カードには配置時・隣に置かれた時・ターン終了時の固有効果があります。配置時と隣接時の能力は逆位置でも通常どおり発動します。</li>
-      <li>逆位置のカードは配置時ダメージが反転し、所有者のターン終了時に22種類それぞれの逆位置固有効果を発動します。正位置のターン終了時効果と同時には発動しません。</li>
-      <li>ターン終了処理の途中で向きが変わったカードは、その終了処理中には新しい向きの効果を発動しません。詳細欄で両方の効果を確認できます。</li>
+      <li>手札と正位置・逆位置を選び、空きマスに配置します。1ターン2枚まで。</li>
+      <li>カードには配置時・隣接時・ターン終了時の効果があります。詳しくはカード詳細へ。</li>
+      <li>逆位置ではダメージ方向が反転し、持ち主のターン終了時に固有効果が発動します。</li>
+      <li>敵の次のカードは右側に表示。カードがあるマスには上書きできません。</li>
+      <li>25マスが埋まると「アルカナバースト」。枚数の少ない側が王冠を1つ失い、盤面をリセットして4枚引き直します。</li>
     </ul>
-    <h4>アイテム（使うと無くなります）</h4>
+    <h4>アイテム</h4>
+    <p>使うとなくなる消耗品です。所持上限は3個。</p>
     <ul>${Object.values(ITEMS).map(it => `<li><b>${it.name}</b>　${it.desc}</li>`).join('')}</ul>
-    <h4>登場する敵</h4>
-    <ul>${enemies.map(e => `<li><b>${e.name}</b>　${e.desc}</li>`).join('')}</ul>
   `;
   document.getElementById('helpModal').style.display = 'flex';
 }
+
 function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
 document.querySelectorAll('img[data-gold-icon]').forEach(img => {
@@ -3632,6 +3894,46 @@ document.addEventListener('keydown', e => {
     '※ 探求者は最初から使用できます。修道女は冒険を1回クリアすると自動解禁。商人は500G、復讐者は1000Gで解禁できます。持ち帰りゴールドと解禁状況はこのブラウザに保存されます。': 'Seeker is available at the start. Unlock Nun by clearing a run once; unlock Merchant for 500G and Avenger for 1000G. Progress is saved in this browser.',
     '各冒険は99Gで開始。クリアまたは敗北したら残りのゴールドを持ち帰り、タイトル画面の所持金に加算します。':'Each run starts with 99G. After a clear or defeat, all remaining gold is added to your saved gold.',
     '最初から使えるのは探求者。修道女は1回クリアで解禁、商人は500G、復讐者は1000Gを持ち帰りゴールドから支払って解禁します。':'Seeker starts unlocked. Clear a run once to unlock Nun, or spend saved gold to unlock Merchant (500G) and Avenger (1000G).'
+  });
+  Object.assign(STRINGS, {
+    '山札と墓地':'Draw Pile and Discard Pile',
+    '山札のカード一覧を見る':'View draw pile cards',
+    '墓地のカード一覧を見る':'View discard pile cards',
+    '山札':'Draw Pile',
+    '墓地':'Discard Pile',
+    'クリックすると中のカードを確認できます。':'Click to inspect the cards.',
+    'カードを選ぶと能力を確認できます。山札の並び順はドロー順を表していません。':'Select a card to view its abilities. Draw-pile order does not indicate draw order.',
+    'カードを選ぶと詳細が表示されます。':'Select a card for details.',
+    'カードはありません。':'There are no cards.',
+    'カードがありません。':'No cards available.',
+    'カード一覧':'Card List'
+  });
+  // Concise Help: exact JP/EN translations for the revised instructions.
+  Object.assign(STRINGS, {
+    "はじめに": "Getting Started",
+    "初めてなら「チュートリアル」で基本操作を練習しましょう。": "New to the game? Practice the basics in Tutorial.",
+    "勝敗": "Winning and Losing",
+    "カードのダメージで上部のポーンが動きます。右端で敵、左端で自分の王冠が1つ減ります。": "Card damage moves the pawn on the top track. Reaching the right edge removes 1 enemy crown; reaching the left edge removes 1 of yours.",
+    "敵の王冠を0にすれば勝利。自分の王冠が0になると敗北です。": "Reduce enemy crowns to zero to win. If yours reach zero, you lose.",
+    "6体の敵をすべて倒すと冒険クリアです。": "Defeat all six enemies to clear the run.",
+    "冒険の流れ": "Your Adventure",
+    "キャラを選択。探求者は愚者＋4枚ドラフト、ほかの3人は専用デッキで開始します。": "Choose a character. Seeker starts with The Fool and four draft picks; the others have fixed decks.",
+    "初期所持金は99G。敵を倒すと10～20Gとカード報酬を獲得できます（重複は15G）。": "Start with 99G. Defeat enemies for 10–20G and a card reward; duplicates give 15G.",
+    "3体目の撃破後にショップが登場。カード・アイテムの購入やカード削除ができます。": "After enemy three, visit the shop to buy cards or items, or remove a card.",
+    "クリア・敗北時の残りゴールドは持ち帰り、キャラの解禁に使えます。": "Keep your remaining gold after a win or loss. Spend it to unlock characters.",
+    "戦闘の基本": "Combat Basics",
+    "手札と正位置・逆位置を選び、空きマスに配置します。1ターン2枚まで。": "Choose a card and its orientation, then place it in an empty cell. Up to two cards per turn.",
+    "カードには配置時・隣接時・ターン終了時の効果があります。詳しくはカード詳細へ。": "Cards have play, adjacency, and end-of-turn effects. See Card Details for more.",
+    "逆位置ではダメージ方向が反転し、持ち主のターン終了時に固有効果が発動します。": "Reversed cards push in the opposite direction and trigger a unique effect at the end of their owner’s turn.",
+    "敵の次のカードは右側に表示。カードがあるマスには上書きできません。": "See the enemy’s next cards on the right. Occupied cells cannot be overwritten.",
+    "25マスが埋まると「アルカナバースト」。枚数の少ない側が王冠を1つ失い、盤面をリセットして4枚引き直します。": "When all 25 cells fill, Arcana Burst removes one crown from the side with fewer cards. The board resets and you redraw four cards.",
+    "使うとなくなる消耗品です。所持上限は3個。": "Items are consumed on use. You can carry up to three."
+});
+  Object.assign(STRINGS, {
+    '残り配置': 'Placements Left',
+    '待機中': 'Waiting',
+    '残り配置回数': 'Remaining Placements',
+    '相手のターン中は配置できません': 'Cannot place during the opponent’s turn'
   });
   const SORTED = Object.keys(STRINGS).sort((a,b)=>b.length-a.length);
   const exact = Object.create(null);
