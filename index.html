@@ -389,6 +389,8 @@
   .bgm-controls { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
   .bgm-controls button { padding: 7px 9px; font-size: 0.75rem; min-width: 94px; }
   .bgm-controls button[aria-pressed="false"] { opacity: 0.72; }
+  .bgm-controls .header-help-btn { min-width: 96px; border-color: var(--border); }
+  .bgm-controls .header-help-btn:hover { color: var(--gold); }
   .bgm-controls input[type="range"] { width: 78px; cursor: pointer; accent-color: var(--gold); }
   .bgm-controls .bgm-label { color: #b8c4cf; font-size: 0.7rem; }
   .help-body h4 { margin: 12px 0 4px; color: var(--gold); font-size: 0.85rem; }
@@ -769,6 +771,7 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <label class="bgm-label" for="bgmVolume">音量</label>
     <input id="bgmVolume" type="range" min="0" max="100" value="32" oninput="setBattleBgmVolume(this.value)" aria-label="BGM音量" />
     <button id="avengerAbilityBtn" type="button" onclick="useAvengerAbility()" style="display:none" title="復讐者：この戦闘で1回だけ配置回数+1">⚔ 追加配置 +1</button>
+    <button id="headerHelpBtn" class="header-help-btn" type="button" onclick="openHelp()" title="あそびかた">あそびかた</button>
     <button id="endTurnBtn" onclick="endTurn()">ターン終了 ▶</button>
   </div>
 </header>
@@ -818,15 +821,6 @@ const GOLD_ICON_SRC = "data:image/webp;base64,UklGRjboAABXRUJQVlA4WAoAAAAQAAAAjw
     <div id="enemyNext" class="next-wrap"></div>
     <h3>カード詳細</h3>
     <div id="cardDetail" class="detail-box"></div>
-    <h3>システム情報</h3>
-    <div id="systemInfoText" style="font-size:0.72rem; color:#888; line-height:1.6;">
-      手札を選び、画面下の「↑正位置 / ↓逆位置」で向きを選んでから盤面をクリックします（1ターン2枚まで）。<br>
-      基本ダメージは正位置・逆位置とも相手方向へ進みます。逆位置カードは<strong>所有者のターン終了時に専用効果</strong>を発動します。<br>
-      配置済みのカードには、味方・敵ともに上書きできません。空きマスを選んでください。<br>
-      25マスが埋まると「アルカナバースト」が発動！ 盤面のカード枚数が少ない側の王冠が1つ減り、その後盤面をリセットして手札を4枚引き直します。<br>
-      敵を倒すと10～20Gを獲得。3体目を倒して報酬を選ぶとショップが現れます（アイテム所持は最大3個）。<br>
-      手札が尽きる（引けるカードが山札にも墓地にも無い）と、盤面のデッキ由来カードを回収します。
-    </div>
   </div>
 </div>
 
@@ -1337,7 +1331,6 @@ function startVersus() {
   document.getElementById('encounterHeading').textContent='対戦相手';
   document.getElementById('enemyNextHeading').style.display='none';
   document.getElementById('enemyNext').style.display='none';
-  document.getElementById('systemInfoText').innerHTML='オンライン対戦（P1＝青、P2＝赤）。各プレイヤーは22枚ずつのデッキと愚者を含む初期手札4枚で開始。1ターン2枚まで配置できます。<br>正位置／逆位置を選んで空きマスへ配置し、相手の王冠3つを先に破壊すれば勝利。アイテム・ゴールド・ショップ・強化はありません。<br>アルカナバースト：25マスが埋まると枚数の少ない陣営の王冠が1つ減り、双方のデッキを回収して4枚引き直します。<br>相手のターン中も盤面・ログ・自分の次の手札を確認できます。相手の手札は非公開で、自分の配置操作はできません。通信が切れると対戦を中断します。';
   document.getElementById('enemyNext').innerHTML='';
   renderInventory();updateStatus();pvpRefreshUI();resizeCanvas();
   log('🌐 オンライン対戦開始！ 双方22枚、初期手札4枚。');
@@ -3958,6 +3951,36 @@ function renderGalleryDetail(id) {
 }
 
 function openHelp() {
+  // Online duels used to show their rules in the sidebar system-info area.
+  // Keep those instructions available in the shared Help dialog instead.
+  if (gameState.pvp) {
+    const english = window.arcanaLanguage === 'en';
+    document.getElementById('helpBody').innerHTML = english ? `
+      <h4>Online Duel</h4>
+      <p>Each player has a 22-card deck, a starting hand of four cards (including The Fool), and three crowns. Items and gold are disabled.</p>
+      <h4>Playing Cards</h4>
+      <p>Choose a card and its orientation, then place it on an empty square. You can place up to two cards per turn. Occupied squares cannot be overwritten.</p>
+      <h4>Winning</h4>
+      <p>Push the pawn to the opponent's end of the track to break one of their crowns. Break all three crowns to win.</p>
+      <h4>Arcana Burst</h4>
+      <p>When all 25 squares are occupied, the side with fewer cards loses one crown. The board resets and both players draw four cards.</p>
+      <h4>Opponent's Turn</h4>
+      <p>You can inspect the board and your own hand, but cannot play cards until your turn. Your opponent's hand remains hidden.</p>
+    ` : `
+      <h4>オンライン対戦</h4>
+      <p>双方22枚のデッキ、愚者を含む初期手札4枚、王冠3つで開始。アイテムとゴールドは使用しません。</p>
+      <h4>カードの配置</h4>
+      <p>手札と正位置・逆位置を選び、空きマスに配置します。1ターン2枚まで。配置済みのマスには置けません。</p>
+      <h4>勝敗</h4>
+      <p>ポーンを相手側の端まで進めると王冠を1つ破壊。相手の王冠をすべて破壊すれば勝利です。</p>
+      <h4>アルカナバースト</h4>
+      <p>25マスが埋まると枚数の少ない側の王冠が1つ減り、盤面をリセットして双方4枚引き直します。</p>
+      <h4>相手のターン</h4>
+      <p>盤面と自分の手札は確認できますが、カードの配置はできません。相手の手札は非公開です。</p>
+    `;
+    document.getElementById('helpModal').style.display = 'flex';
+    return;
+  }
   document.getElementById('helpBody').innerHTML = `
     <h4>はじめに</h4>
     <p>初めてなら「チュートリアル」で基本操作を練習しましょう。</p>
